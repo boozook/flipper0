@@ -56,6 +56,7 @@ TODO:
 - [ ] wrapper for fs
 - [x] impl panic handler
 - [ ] impl global alocator
+- [ ] get from web by api_symbols.csv with opaque types
 - [x] gen from source
 - [ ] gen from built firmware
 - [ ] gen from product of `fbt sdk_tree`

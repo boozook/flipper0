@@ -1,11 +1,13 @@
 [package]
 name = "flipper0"
 description = "Rust bindings for Flipper Zero FW"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 
 authors = ["Alex Koz <a@koz.email>"]
 documentation = "https://docs.rs/flipper0"
+keywords = ["api", "ffi", "bindings", "no-std", "flipper-zero"]
+categories = ["api-bindings", "external-ffi-bindings", "no-std", "flipper-zero"]
 homepage = "https://github.com/boozook/flipper0"
 repository = "https://github.com/boozook/flipper0.git"
 license = "MIT"
