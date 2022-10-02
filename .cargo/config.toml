@@ -1,0 +1,11 @@
+[build]
+target = "thumbv7em-none-eabihf"
+
+[target.aarch64-apple-darwin]
+rustflags = ["-C", "target-cpu=native"]
+
+[target.thumbv7em-none-eabihf]
+rustflags = [
+	"-C", "target-cpu=cortex-m4",
+	"-C", "target-feature=+long-calls",
+]
