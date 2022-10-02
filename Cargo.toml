@@ -1,0 +1,56 @@
+[package]
+name = "flipper0"
+description = "Rust bindings for Flipper Zero FW"
+version = "0.1.1"
+edition = "2021"
+
+authors = ["Alex Koz <a@koz.email>"]
+documentation = "https://docs.rs/flipper0"
+homepage = "https://github.com/boozook/flipper0"
+repository = "https://github.com/boozook/flipper0.git"
+license = "MIT"
+
+maintenance = { status = "actively-developed" }
+readme = "README.md"
+
+build = "src/build.rs"
+
+include = [
+	"/src",
+	"/gen",
+	"/.cargo",
+	".rustfmt.toml",
+	"rust-toolchain.toml",
+	"README.md",
+	"LICENSE",
+	"!/examples",
+]
+examples = ["/.*"]
+
+
+[lib]
+bench = false
+test = false
+
+
+[features]
+default = ["prebuild"]
+prebuild = []
+
+
+[build-dependencies]
+rustygit = "0.4"
+semver = "1.0"
+wax = "0.5"
+csv = "1.1"
+
+[build-dependencies.bindgen]
+version = "0.60.1"
+features = ["runtime", "which-rustfmt", "logging"]
+default-features = true
+
+
+[package.metadata.docs.rs]
+default-target = "thumbv7em-none-eabihf"
+targets = []
+all-features = true
