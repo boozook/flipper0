@@ -1,17 +1,21 @@
+[workspace]
+resolver = "2"
+members = ["ext/flipper"]
+
+
 [package]
-name = "flipper0"
-description = "Rust bindings for Flipper Zero FW"
-version = "0.1.4"
+name = "flipper0-sys"
+description = "Bindings for Flipper Zero FW"
+version = "0.1.5"
 edition = "2021"
 
 authors = ["Alex Koz <a@koz.email>"]
-documentation = "https://docs.rs/flipper0"
+documentation = "https://docs.rs/flipper0-sys"
 keywords = ["api", "ffi", "bindings", "no-std", "flipper-zero"]
 categories = ["api-bindings", "external-ffi-bindings", "no-std"]
 homepage = "https://github.com/boozook/flipper0"
 repository = "https://github.com/boozook/flipper0.git"
 license = "MIT"
-
 readme = "README.md"
 
 build = "src/build.rs"
@@ -20,12 +24,14 @@ include = [
 	"/src",
 	"/gen",
 	"/.cargo",
-	".rustfmt.toml",
-	"rust-toolchain.toml",
-	"README.md",
-	"LICENSE",
+	"/.rustfmt.toml",
+	"/rust-toolchain.toml",
+	"/LICENSE",
 	"!/examples",
 ]
+
+[badges]
+maintenance = { status = "actively-developed" }
 
 
 [lib]
@@ -35,9 +41,9 @@ test = false
 
 [features]
 default = ["prebuild", "allocator", "panic"]
-prebuild = [] # use pregenerated bindings
-allocator = [] # global allocator impl
-panic = [] # panic handler
+prebuild = []                                # use pregenerated bindings
+allocator = []                               # global allocator impl
+panic = []                                   # panic handler
 
 
 [build-dependencies]

@@ -33,6 +33,6 @@ fn on_oom(layout: Layout) -> ! {
 			layout.align(),
 			memmgr_get_free_heap()
 		).into_bytes());
-		crate::furi::crash(message.as_ptr() as _)
+		crate::sys::crash(message.as_ptr() as _)
 	}
 }

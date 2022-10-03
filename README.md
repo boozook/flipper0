@@ -1,9 +1,11 @@
-# Rust bindings for Flipper Zero
+# Bindings for Flipper Zero
 
 Automatically generated bindings (or "externs") for [Flipper Zero Fw][] with some little hand-crafted wrappers and additions as upper abstraction layer.
 
 
 ## State
+
+![Maintenance Status](https://img.shields.io/badge/maintenance-actively--developed-brightgreen.svg)
 
 Current state of the project is WiP. _Highlly & dirty work-in-progress._
 

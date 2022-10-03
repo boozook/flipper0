@@ -30,6 +30,6 @@ pub fn panic(panic_info: &PanicInfo<'_>) -> ! {
 	unsafe {
 		let message = CString::from_vec_unchecked(message.into_bytes());
 		furi_thread_yield();
-		crate::furi::crash(message.as_ptr() as _)
+		crate::sys::crash(message.as_ptr() as _)
 	}
 }

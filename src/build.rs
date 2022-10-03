@@ -15,12 +15,6 @@ use semver::VersionReq;
 mod consts;
 
 
-const SDK_VER_SUPPORTED: &str = "~0.68.1";
-const API_VER_SUPPORTED: &str = "1.13";
-#[allow(dead_code)] // for future validation
-const TOOLCHAIN_VER_SUPPORTED: &str = "=15";
-
-
 fn main() -> Result<(), Box<dyn Error>> {
 	let pwd = std::env::current_dir()?;
 	let cargo_profile = std::env::var("PROFILE").expect("PROFILE cargo env var");
@@ -54,7 +48,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 
 	let (version, symbols) = read_api_table(&root)?;
-	check_version(&version.as_deref().unwrap_or("n/a"), API_VER_SUPPORTED.parse()?, "API");
+	check_version(&version.as_deref().unwrap_or("n/a"), consts::SDK_VERSION.parse()?, "API");
 
 	let header = gen_api_table_header(&symbols)?;
 	let extra = get_extra_headers(&symbols)?;
@@ -135,7 +129,7 @@ fn validate_sdk<P: AsRef<Path>>(root: P) -> Result<(), Box<dyn Error>> {
 	         "cargo:rerun-if-changed={}",
 	         root.as_ref().join(PathBuf::from(".git/HEAD")).display()
 	);
-	check_version_git(root.as_ref(), SDK_VER_SUPPORTED.parse()?, "SDK")?;
+	check_version_git(root.as_ref(), consts::SDK_VERSION.parse()?, "SDK")?;
 	Ok(())
 }
 
@@ -448,9 +442,6 @@ fn from_build<P: AsRef<Path>>(_root: P,
 
 
 fn from_sdk_tree<P: AsRef<Path>>(root: P, _debug: bool) -> Result<(bindgen::Builder, Option<PathBuf>), Box<dyn Error>> {
-	// #![allow(unreachable_code)]
-	// return Err(std::io::Error::other("Not implemented yet").into());
-
 	let dirname = if _debug { "f7-firmware-D" } else { "f7-firmware-R" };
 	let sdk = root.as_ref().join(PathBuf::from(format!("build/{dirname}/sdk/")));
 	let opts = std::fs::read_to_string(sdk.join("sdk.opts"))?;
