@@ -1,3 +1,4 @@
+#![cfg(feature = "panic")]
 use crate::ffi::*;
 use alloc::format;
 use alloc::ffi::CString;
@@ -20,7 +21,7 @@ pub fn panic(panic_info: &PanicInfo<'_>) -> ! {
 	let message = format!("[{thread_name}] panic: {panic_info}");
 
 
-	// TODO: if CLI enabled __only__!
+	// TODO: if CLI & logging enabled __only__!
 	unsafe {
 		furi_thread_stdout_write(message.as_ptr() as _, message.len());
 		furi_thread_stdout_flush();

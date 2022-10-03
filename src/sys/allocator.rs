@@ -1,5 +1,4 @@
 #![cfg(feature = "allocator")]
-
 use core::alloc::{GlobalAlloc, Layout};
 use core::ffi::c_void;
 use alloc::ffi::CString;
@@ -26,7 +25,9 @@ unsafe impl GlobalAlloc for Furi {
 #[alloc_error_handler]
 fn on_oom(layout: Layout) -> ! {
 	unsafe {
+		// TODO: this is not really necessary:
 		furi_thread_yield();
+
 		let message = CString::from_vec_unchecked(format!(
 			"OoM: requested {}b, align: {}, free: {}b",
 			layout.size(),

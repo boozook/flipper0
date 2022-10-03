@@ -5,8 +5,8 @@ members = ["ext/flipper"]
 
 [package]
 name = "flipper0-sys"
-description = "Bindings for Flipper Zero FW"
-version = "0.1.5"
+description = "Bindings for Flipper Zero fw"
+version = "0.2.0"
 edition = "2021"
 
 authors = ["Alex Koz <a@koz.email>"]
@@ -18,7 +18,7 @@ repository = "https://github.com/boozook/flipper0.git"
 license = "MIT"
 readme = "README.md"
 
-build = "src/build.rs"
+build = "src/build/main.rs"
 
 include = [
 	"/src",
@@ -30,6 +30,7 @@ include = [
 	"!/examples",
 ]
 
+
 [badges]
 maintenance = { status = "actively-developed" }
 
@@ -40,10 +41,25 @@ test = false
 
 
 [features]
-default = ["prebuild", "allocator", "panic"]
-prebuild = []                                # use pregenerated bindings
-allocator = []                               # global allocator impl
-panic = []                                   # panic handler
+default = [
+	"all-symbols",
+	"allocator",
+	"panic",
+	"prebuild",
+	"use-local-sdk",
+	"use-remote-sdk",
+]
+# parts:
+allocator = [] # global allocator impl
+panic = []     # panic handler
+# what symbols are in:
+all-symbols = ["apps-symbols"] # TODO
+apps-symbols = []              # TODO
+api-symbols = []               # TODO
+# build methods:
+prebuild = []       # use pregenerated bindings
+use-local-sdk = []  # look at `FLIPPER_REPO_PATH`, try to build from source
+use-remote-sdk = [] # build from remote git repo (slow)
 
 
 [build-dependencies]

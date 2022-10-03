@@ -1,15 +1,16 @@
 #![cfg_attr(not(test), no_std)]
 #![feature(custom_inner_attributes)]
 #![cfg_attr(feature = "allocator", feature(alloc_error_handler))]
-// #![deny(rustdoc::broken_intra_doc_links)]
 
 pub extern crate alloc;
 
+mod build {
+	mod macros;
+	mod consts;
+}
 
-#[cfg(not(doc))]
-mod consts;
 #[cfg(doc)]
-pub mod consts;
+pub use build::consts;
 
 
 pub mod ffi {
@@ -31,10 +32,7 @@ pub mod ffi {
 
 
 pub mod sys {
-	#[cfg(feature = "panic")]
 	pub mod r#panic;
-
-	#[cfg(feature = "allocator")]
 	pub mod allocator;
 
 
