@@ -15,8 +15,8 @@ use semver::VersionReq;
 mod consts;
 
 
-const SDK_VER_SUPPORTED: &str = "~0.68";
-const API_VER_SUPPORTED: &str = "~1.13";
+const SDK_VER_SUPPORTED: &str = "~0.68.1";
+const API_VER_SUPPORTED: &str = "1.13";
 #[allow(dead_code)] // for future validation
 const TOOLCHAIN_VER_SUPPORTED: &str = "=15";
 

@@ -7,7 +7,7 @@ Automatically generated bindings (or "externs") for [Flipper Zero Fw][] with som
 
 Current state of the project is WiP. _Highlly & dirty work-in-progress._
 
-Supported (means "tested with") fw version: __0.68.0__ but should work normally with any 0.68.
+Supported (means "tested with") fw version: __0.68.1__ but should work normally with any 0.68.x without `prebuild` feature.
 
 
 ## Prerequisites
@@ -40,6 +40,8 @@ FLIPPER_REPO_PATH=~/path/to/flipperzero-firmware/ cargo build --release
 
 
 ### Features:
+- `allocator`: default, include global allocator implementation
+- `panic`: default, include global panic & OoM handler
 - `prebuild`: default, use pre-generated bindings
 
 _`prebuild`_ is default feature just for ability to build crate out-of-the-box.
@@ -55,7 +57,7 @@ TODO:
 - [ ] wrapper for threading
 - [ ] wrapper for fs
 - [x] impl panic handler
-- [ ] impl global alocator
+- [x] impl global alocator
 - [ ] get from web by api_symbols.csv with opaque types
 - [x] gen from source
 - [ ] gen from built firmware

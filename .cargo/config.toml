@@ -5,7 +5,4 @@ target = "thumbv7em-none-eabihf"
 rustflags = ["-C", "target-cpu=native"]
 
 [target.thumbv7em-none-eabihf]
-rustflags = [
-	"-C", "target-cpu=cortex-m4",
-	"-C", "target-feature=+long-calls",
-]
+rustflags = ["-C", "target-cpu=cortex-m4"]
