@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
-members = ["ext/flipper"]
+members = ["ext/*", "examples/*"]
+default-members = [".", "ext/*"]
 
 
 [package]
@@ -27,7 +28,7 @@ include = [
 	"/.rustfmt.toml",
 	"/rust-toolchain.toml",
 	"/LICENSE",
-	"!/examples",
+	"!/examples/*",
 ]
 
 
@@ -39,14 +40,14 @@ maintenance = { status = "actively-developed" }
 bench = false
 test = false
 
+[[example]]
+name = "hello-fap"
+path = "examples/hello-fap.rs"
+crate-type = ["staticlib"]
+
 
 [features]
-default = [
-	"allocator",
-	"panic",
-	"prebuild",
-	"use-local-sdk",
-]
+default = ["allocator", "panic", "prebuild", "use-local-sdk"]
 # parts:
 allocator = [] # global allocator impl
 panic = []     # panic handler

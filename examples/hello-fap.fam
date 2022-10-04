@@ -1,0 +1,9 @@
+App(
+    appid="hello_fap",
+    name="Hello, FAP",
+    fap_icon="hello_rust_10px.png",
+    entry_point="init",
+    sources=["libhello_fap.a"],
+    fap_category="Misc",
+    apptype=FlipperAppType.EXTERNAL,
+)
