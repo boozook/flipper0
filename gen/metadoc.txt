@@ -1,0 +1,1 @@
+ Flipper Zero SDK git tag: 0.68.1, revision: 5c52bb76217679db33b8cb6bff4273df11785388, API version: __1.13__.

@@ -9,6 +9,7 @@ use semver::VersionReq;
 
 use crate::consts;
 use crate::api_table;
+use crate::source::doc_sdk_metadata_row;
 
 
 pub fn sdk_path() -> Result<PathBuf, Box<dyn Error>> {
@@ -73,11 +74,11 @@ pub fn try_build() -> Result<(), Box<dyn Error>> {
 	let cargo_target_triple = env::var("TARGET").expect("TARGET cargo env var");
 
 	let debug = crate::is_debug();
-	let output_filename = if debug { "flipper0-debug.rs" } else { "flipper0-release.rs" };
+	let output_filename = crate::bindings_filename(debug);
 
 	let root = sdk_path()?;
 
-	validate_sdk(&root)?;
+	let (sdk_tags, sdk_rev) = validate_sdk(&root)?;
 
 	let (version, symbols) = api_table::find_read_api_table(&root)?;
 	crate::check_version(&version.as_deref().unwrap_or("n/a"), consts::API_VERSION.parse()?, "API");
@@ -114,6 +115,24 @@ pub fn try_build() -> Result<(), Box<dyn Error>> {
 		                                             .derive_partialord(crate::feature("derive-partialord"))
 		                                             .generate_comments(true)
 		                                             .parse_callbacks(box DeriveCallbacks { exclude: exclustions.clone() });
+
+
+		// metadata for documentation:
+		let metadata = doc_sdk_metadata_row(sdk_rev.as_ref(), &sdk_tags, version.as_ref());
+		println!("cargo:rustc-env={}={}", consts::BINDINGS_METADATA_DOC_ENV, metadata);
+		builder = builder.raw_line(format!("/* {metadata} */"));
+
+
+		// whitelist api-symbols:
+		for sym in symbols.iter() {
+			use api_table::ApiTableRow::*;
+			match sym {
+				Header { name, .. } => builder = builder.allowlist_file(name),
+				Variable { name, .. } => builder = builder.allowlist_var(name),
+				Function { name, .. } => builder = builder.allowlist_function(name),
+			}
+		}
+
 
 		// ARM toolchain
 		builder = builder.blocklist_file("stdlib.h")
@@ -177,13 +196,12 @@ pub fn try_build() -> Result<(), Box<dyn Error>> {
 }
 
 
-pub fn validate_sdk<P: AsRef<Path>>(root: P) -> Result<(), Box<dyn Error>> {
+pub fn validate_sdk<P: AsRef<Path>>(root: P) -> Result<FwVersion, Box<dyn Error>> {
 	println!(
 	         "cargo:rerun-if-changed={}",
 	         root.as_ref().join(PathBuf::from(".git/HEAD")).display()
 	);
-	check_version_git(root.as_ref(), consts::SDK_VERSION.parse()?, "SDK")?;
-	Ok(())
+	check_version_git(root.as_ref(), consts::SDK_VERSION.parse()?, "SDK")
 }
 
 // Unfortunately there are no VERSION file yet.
@@ -194,13 +212,16 @@ pub fn _check_version_file<S: std::fmt::Display>(path: &Path, supported: Version
 }
 
 
-pub fn check_version_git<S: std::fmt::Display>(root: &Path, supported: VersionReq, name: S) -> Result<(), Box<dyn Error>> {
+/// (tags, commit)
+type FwVersion = (Vec<String>, Option<String>);
+pub fn check_version_git<S: std::fmt::Display>(root: &Path, supported: VersionReq, name: S) -> Result<FwVersion, Box<dyn Error>> {
 	let root = PathBuf::from(root);
 	let repo = rustygit::Repository::new(&root);
 	let tags = repo.cmd_out(["tag", "--points-at", "HEAD"])?;
-	let mut versions = tags.into_iter().filter_map(|t| semver::Version::parse(&t).ok());
+	let commit = repo.get_hash(false).ok();
+	let version = tags.iter().filter_map(|t| semver::Version::parse(&t).ok()).next();
 
-	if let Some(version) = versions.next() {
+	if let Some(version) = version {
 		println!("cargo:info=Flipper SDK version determined from git tag: {version:}");
 		if !supported.matches(&version) {
 			println!("cargo:warning={name} version probably not supported. Supported version '{supported}' does not matches {version}.");
@@ -209,7 +230,7 @@ pub fn check_version_git<S: std::fmt::Display>(root: &Path, supported: VersionRe
 		println!("cargo:warning=Flipper SDK version not found");
 	}
 
-	Ok(())
+	Ok((tags, commit))
 }
 
 

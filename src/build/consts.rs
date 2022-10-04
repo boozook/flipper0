@@ -5,6 +5,8 @@
 mod env {
 	/// Env var name for internal use, points to generated bindings.
 	pub const BINDINGS_ENV: &'static str = "BINDINGS";
+	/// Env var name for internal use, contains doc-line for bindings.
+	pub const BINDINGS_METADATA_DOC_ENV: &'static str = "BINDINGS_METADATA_DOC";
 
 	// local
 	/// Env var name, value should contain path to the root of the Flipper Zero firmware repository.
@@ -35,9 +37,12 @@ mod support {
 }
 
 
+pub(crate) use env::BINDINGS_ENV;
+pub(crate) use env::BINDINGS_METADATA_DOC_ENV;
+
 doc_export!(env::FLIPPER_SDK_PATH_ENV);
 doc_export!(env::ARM_TOOLCHAIN_PATH_ENV);
-pub(crate) use env::BINDINGS_ENV;
+
 doc_export!(env::FLIPPER_NET_SDK_REV_ENV);
 doc_export!(env::FLIPPER_NET_SDK_BRANCH_ENV);
 doc_export!(env::FLIPPER_NET_SDK_PATH);

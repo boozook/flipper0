@@ -6,7 +6,7 @@ pub extern crate alloc;
 
 mod build {
 	mod macros;
-	mod consts;
+	pub mod consts;
 }
 
 #[cfg(doc)]
@@ -14,6 +14,9 @@ pub use build::consts;
 
 
 pub mod ffi {
+	//! Automatically generated low-level bindings.
+	//!
+	#![doc = core::env!("BINDINGS_METADATA_DOC", "Bingings metadata not found.")]
 	#![allow(non_upper_case_globals)]
 	#![allow(non_camel_case_types)]
 	#![allow(non_snake_case)]

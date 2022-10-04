@@ -19,7 +19,7 @@ maintenance = { status = "actively-developed" }
 
 
 [features]
-default = ["allocator", "panic"]
+default = ["allocator", "panic", "prebuild"]
 # parts:
 allocator = ["bindings/allocator"] # global allocator impl
 panic = ["bindings/panic"]         # panic handler
