@@ -21,12 +21,12 @@ mod source;
 fn main() -> Result<(), Box<dyn Error>> {
 	let cargo_profile = env::var("PROFILE").expect("PROFILE cargo env var");
 	let debug = cargo_profile.to_lowercase().eq("debug");
-	let output_filename = if debug { "flipper0-debug.rs" } else { "flipper0-release.rs" };
+	let output_filename = bindings_filename(debug);
 
 	// crate features:
-	let prebuild = env_var_bool("CARGO_FEATURE_PREBUILD");
-	let use_local_sdk = env_var_bool("CARGO_FEATURE_USE_LOCAL_SDK");
-	let use_remote_sdk = env_var_bool("CARGO_FEATURE_USE_REMOTE_SDK");
+	let prebuild = feature("prebuild");
+	let use_local_sdk = feature("use-local-sdk");
+	let use_remote_sdk = feature("use-remote-sdk");
 
 	if prebuild {
 		let root = env::var_os("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR cargo env var");
@@ -84,4 +84,19 @@ fn env_var_bool<K: AsRef<OsStr>>(key: K) -> bool {
 	env::var(key).ok()
 	             .filter(|s| s == "1" || s.to_lowercase() == "true")
 	             .is_some()
+}
+
+
+fn feature(feature: &str) -> bool {
+	let name = feature.to_uppercase().replace("-", "_");
+	env_var_bool(format!("CARGO_FEATURE_{name}"))
+}
+
+
+fn bindings_filename(debug: bool) -> &'static str {
+	if debug {
+		"flipper0-debug.rs"
+	} else {
+		"flipper0-release.rs"
+	}
 }

@@ -34,7 +34,7 @@ package = "flipper0-sys"
 version = "0.2"
 path = "../.."
 default-features = false
-features = ["api-symbols"]
+features = []
 
 
 [package.metadata.docs.rs]

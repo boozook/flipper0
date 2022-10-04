@@ -42,7 +42,6 @@ test = false
 
 [features]
 default = [
-	"all-symbols",
 	"allocator",
 	"panic",
 	"prebuild",
@@ -51,14 +50,18 @@ default = [
 # parts:
 allocator = [] # global allocator impl
 panic = []     # panic handler
-# what symbols are in:
-all-symbols = ["apps-symbols"] # TODO
-apps-symbols = []              # TODO
-api-symbols = []               # TODO
 # build methods:
 prebuild = []       # use pregenerated bindings
 use-local-sdk = []  # look at `FLIPPER_REPO_PATH`, try to build from source
 use-remote-sdk = [] # build from remote git repo (slow)
+# build options:
+derive-default = []
+derive-eq = []
+derive-copy = []
+derive-hash = []
+derive-ord = []
+derive-partialeq = []
+derive-partialord = []
 
 
 [build-dependencies]
