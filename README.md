@@ -67,7 +67,7 @@ Build methods features:
 | ---------------- | -------- | ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | `prebuild`       | +        | use pre-generated bindings                                             |                                                                                                           |
 | `use-local-sdk`  | +        | look at `FLIPPER_REPO_PATH`, build from source                         | `FLIPPER_REPO_PATH` (required), `ARM_TOOLCHAIN` (optional)                                                |
-| `use-remote-sdk` | +        | clone remote git repo, initial setup with fbt, then build from source. | `FLIPPER_REPO_REV`, `FLIPPER_REPO_BRANCH`, `FLIPPER_REPO_CLONE_PATH`, `ARM_TOOLCHAIN` (all vars optional) |
+| `use-remote-sdk` | -        | clone remote git repo, initial setup with fbt, then build from source. | `FLIPPER_REPO_REV`, `FLIPPER_REPO_BRANCH`, `FLIPPER_REPO_CLONE_PATH`, `ARM_TOOLCHAIN` (all vars optional) |
 
 _`prebuild` is default feature just for ability to build crate out-of-the-box._
 

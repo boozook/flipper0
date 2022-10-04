@@ -6,7 +6,7 @@ members = ["ext/flipper"]
 [package]
 name = "flipper0-sys"
 description = "Bindings for Flipper Zero fw"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 
 authors = ["Alex Koz <a@koz.email>"]
@@ -47,7 +47,6 @@ default = [
 	"panic",
 	"prebuild",
 	"use-local-sdk",
-	"use-remote-sdk",
 ]
 # parts:
 allocator = [] # global allocator impl
