@@ -5,7 +5,7 @@ Automatically generated bindings (or "externs") for [Flipper Zero Fw][] with som
 
 Useful for:
 - FAPs (default features, without `all-symbols`)
-- Fw modules, services ant built-in apps because there are building from source, so includes all symbols (use feature `all-symbols`)
+- Fw modules, services and built-in apps because there are building from source, so includes all symbols (use feature `all-symbols`)
 
 
 ## State
