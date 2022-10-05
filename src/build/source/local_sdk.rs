@@ -141,7 +141,7 @@ pub fn try_build() -> Result<(), Box<dyn Error>> {
 
 		// specifically for the target:
 		if let "thumbv7em-none-eabihf" = cargo_target_triple.as_ref() {
-			builder = builder.clang_args(&["-target", "thumbv7em-none-eabihf"]);
+			builder = builder.clang_args(&["-target", &cargo_target_triple]);
 		}
 
 

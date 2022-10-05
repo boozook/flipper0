@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
-members = ["ext/*", "examples/*"]
-default-members = [".", "ext/*"]
+members = ["flipper", "format/*", "build/*", "examples/*"]
+default-members = ["flipper", ".", "build/*"]
 
 
 [package]
@@ -19,6 +19,7 @@ repository = "https://github.com/boozook/flipper0.git"
 license = "MIT"
 readme = "README.md"
 
+rust-version = "1.66"
 build = "src/build/main.rs"
 
 include = [
@@ -44,6 +45,11 @@ test = false
 name = "hello-fap"
 path = "examples/hello-fap.rs"
 crate-type = ["staticlib"]
+
+# [[example]]
+# name = "hello-fap-manifest"
+# # crate-type = ["staticlib"]
+# path = "examples/hello-fap-manifest/src/lib.rs"
 
 
 [features]

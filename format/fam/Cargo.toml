@@ -1,0 +1,21 @@
+[package]
+name = "fam"
+description = "Flipper Zero Application Manifest format"
+version = "0.1.0"
+edition = "2021"
+
+authors = ["Alex Koz <a@koz.email>"]
+documentation = "https://docs.rs/fam"
+keywords = ["flipper-zero", "manifest", "format", "fam"]
+categories = ["parser-implementations"]
+homepage = "https://github.com/boozook/flipper0/format/fam"
+repository = "https://github.com/boozook/flipper0.git"
+license = "MIT"
+readme = "README.md"
+
+
+[dependencies]
+handlebars = "4.3.5"
+serde_json = "1.0"
+toml = { version = "0.5.9", optional = true }
+serde = { version = "1.0", features = ["derive"] }

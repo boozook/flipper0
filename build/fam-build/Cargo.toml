@@ -1,0 +1,26 @@
+[package]
+name = "flipper0-fam-build"
+description = "Flipper Zero Application Manifest generator"
+version = "0.1.0"
+edition = "2021"
+
+
+authors = ["Alex Koz <a@koz.email>"]
+documentation = "https://docs.rs/fam"
+keywords = ["flipper-zero", "manifest", "format", "fam"]
+categories = ["development-tools::build-utils"]
+homepage = "https://github.com/boozook/flipper0/build/fam-build"
+repository = "https://github.com/boozook/flipper0.git"
+license = "MIT"
+readme = "README.md"
+
+
+[dependencies]
+crate-metadata = "*"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+handlebars = "4.3.5"
+
+[dependencies.fam]
+version = "*"
+path = "../../format/fam"
