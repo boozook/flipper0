@@ -18,6 +18,7 @@ name = "Hello, FAP"                # optional, default is crate name
 # type = "FlipperAppType.EXTERNAL" # optional, default is FlipperAppType.EXTERNAL
 # icon = "icon_10px.png"           # optional
 # category = "Misc"                # optional, default Misc
+# documentation: https://docs.rs/fam
 
 
 [lib]
