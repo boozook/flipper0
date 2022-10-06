@@ -206,7 +206,7 @@ macro_rules! field {
 	};
 
 	($key:ident, opt str) => {
-		fn $key(&self) -> Option<&str> {
+		pub fn $key(&self) -> Option<&str> {
 			match self {
 				Self::Struct { $key, .. } => Some($key.as_deref()).flatten(),
 				Self::Raw(value) => {
@@ -219,7 +219,7 @@ macro_rules! field {
 	};
 
 	($key:ident, iter String) => {
-		fn $key(&self) -> Box<dyn Iterator<Item = String> + '_> {
+		pub fn $key(&self) -> Box<dyn Iterator<Item = String> + '_> {
 			match self {
 				Self::Struct { $key, .. } => box $key.into_iter().cloned(),
 				Self::Raw(value) => {
