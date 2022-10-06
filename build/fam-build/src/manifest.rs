@@ -18,7 +18,7 @@ impl From<FapMetadata> for Manifest {
 }
 
 impl From<fam::Manifest> for Manifest {
-	fn from(mainfest: fam::Manifest) -> Self { Self::Manifest(mainfest) }
+	fn from(manifest: fam::Manifest) -> Self { Self::Manifest(manifest) }
 }
 
 impl From<Value> for Manifest {
@@ -27,6 +27,14 @@ impl From<Value> for Manifest {
 
 
 impl Manifest {
+	pub fn id(&self) -> Option<&str> {
+		match self {
+			Manifest::Metadata(ref metadata) => metadata.id.as_deref(),
+			Manifest::Manifest(ref manifest) => manifest.appid(),
+		}
+	}
+
+
 	pub fn save_to_out_dir(&self) -> Result<PathBuf> { crate::fam_out_path().and_then(|path| self.save_to(&path).map(|_| path)) }
 
 	pub fn save_to<P: AsRef<Path>>(&self, path: P) -> Result { std::fs::write(&path, self.try_to_string()?).map_err(Into::into) }

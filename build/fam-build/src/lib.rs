@@ -1,5 +1,3 @@
-#![feature(result_flattening)]
-
 use std::env;
 use std::path::Path;
 use std::path::PathBuf;
@@ -41,6 +39,8 @@ pub fn manifest_named<S: AsRef<str>>(filename: S) -> Result<Manifest> {
 	let root = crate_root()?;
 	let manifest = root.join(filename.as_ref());
 	let name = crate_name()?;
+
+	println!("cargo:rerun-if-changed={}", manifest.display());
 
 
 	let (target_directory, mut crate_metadata) = {

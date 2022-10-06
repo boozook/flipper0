@@ -4,19 +4,11 @@
 
 pub extern crate alloc;
 
-mod build {
-	mod macros;
-	pub mod consts;
-}
-
-#[cfg(doc)]
-pub use build::consts;
-
 
 pub mod ffi {
 	//! Automatically generated low-level bindings.
 	//!
-	#![doc = core::env!("BINDINGS_METADATA_DOC", "Bingings metadata not found.")]
+	#![doc = core::env!("BINDINGS_METADATA_DOC", "Bindings metadata not found.")]
 	#![allow(non_upper_case_globals)]
 	#![allow(non_camel_case_types)]
 	#![allow(non_snake_case)]
@@ -30,7 +22,7 @@ pub mod ffi {
 	#[cfg(all(test, no_std))]
 	use core::{debug_assert_eq, debug_assert};
 
-	core::include!(core::env!("BINDINGS", "Bingings not found. Build-script faild."));
+	core::include!(core::env!("BINDINGS", "Bindings not found. Build-script failed."));
 }
 
 

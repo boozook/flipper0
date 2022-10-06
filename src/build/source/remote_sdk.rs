@@ -11,12 +11,12 @@ const URI: &'static str = "https://github.com/flipperdevices/flipperzero-firmwar
 
 
 pub fn git_clone_sdk() -> Result<PathBuf, Box<dyn Error>> {
-	let rev = env::var(consts::FLIPPER_NET_SDK_REV_ENV).ok();
-	let branch = env::var(consts::FLIPPER_NET_SDK_BRANCH_ENV).ok();
+	let rev = env::var(consts::env::FLIPPER_NET_SDK_REV_ENV).ok();
+	let branch = env::var(consts::env::FLIPPER_NET_SDK_BRANCH_ENV).ok();
 
-	println!("cargo:rerun-if-env-changed={}", consts::FLIPPER_NET_SDK_REV_ENV);
-	println!("cargo:rerun-if-env-changed={}", consts::FLIPPER_NET_SDK_BRANCH_ENV);
-	println!("cargo:rerun-if-env-changed={}", consts::FLIPPER_NET_SDK_PATH);
+	println!("cargo:rerun-if-env-changed={}", consts::env::FLIPPER_NET_SDK_REV_ENV);
+	println!("cargo:rerun-if-env-changed={}", consts::env::FLIPPER_NET_SDK_BRANCH_ENV);
+	println!("cargo:rerun-if-env-changed={}", consts::env::FLIPPER_NET_SDK_PATH);
 
 	let path = PathBuf::from(env::var("OUT_DIR")?).join("flipperzero-firmware");
 
@@ -57,13 +57,13 @@ fn try_setup<P: AsRef<Path>>(root: P) -> Result<(), Box<dyn Error>> {
 	use std::process::Command;
 
 	// check toolchain first
-	let orig_flipper_sdk_path = env::var_os(consts::FLIPPER_SDK_PATH_ENV);
-	env::set_var(consts::FLIPPER_SDK_PATH_ENV, root.as_ref());
+	let orig_flipper_sdk_path = env::var_os(consts::env::FLIPPER_SDK_PATH_ENV);
+	env::set_var(consts::env::FLIPPER_SDK_PATH_ENV, root.as_ref());
 	let toolchain_not_found = find_arm_toolchain(&root).is_err();
 	if let Some(var) = orig_flipper_sdk_path {
-		env::set_var(consts::FLIPPER_SDK_PATH_ENV, var)
+		env::set_var(consts::env::FLIPPER_SDK_PATH_ENV, var)
 	} else {
-		env::remove_var(consts::FLIPPER_SDK_PATH_ENV)
+		env::remove_var(consts::env::FLIPPER_SDK_PATH_ENV)
 	}
 
 	if !toolchain_not_found {

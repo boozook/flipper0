@@ -13,7 +13,7 @@ build = "build.rs"
 
 [package.metadata.fap]
 main = "init"
-name = "Hello, FAP"                # optional, default is crate name
+name = "Hello, Flipper"            # optional, default is crate name
 # id = "hello-fap"                 # optional, default is crate name
 # type = "FlipperAppType.EXTERNAL" # optional, default is FlipperAppType.EXTERNAL
 # icon = "icon_10px.png"           # optional
@@ -22,7 +22,6 @@ name = "Hello, FAP"                # optional, default is crate name
 
 
 [lib]
-# name = "ololo"
 path = "../hello-fap.rs"
 crate-type = ["staticlib"]
 bench = false

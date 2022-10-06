@@ -13,14 +13,14 @@ use crate::source::doc_sdk_metadata_row;
 
 
 pub fn sdk_path() -> Result<PathBuf, Box<dyn Error>> {
-	println!("cargo:rerun-if-env-changed={}", consts::FLIPPER_SDK_PATH_ENV);
-	if let Some(sdk_path) = env::var_os(consts::FLIPPER_SDK_PATH_ENV) {
+	println!("cargo:rerun-if-env-changed={}", consts::env::FLIPPER_SDK_PATH_ENV);
+	if let Some(sdk_path) = env::var_os(consts::env::FLIPPER_SDK_PATH_ENV) {
 		Ok(PathBuf::from(sdk_path))
 	} else {
 		println!(
 		         "cargo:warning=env var `{}` not found, please set it. \
 		         You can enable `prebuild` feature to use prebuilt bindings.",
-		         consts::FLIPPER_SDK_PATH_ENV
+		         consts::env::FLIPPER_SDK_PATH_ENV
 		);
 		Err(env::VarError::NotPresent.into()).into()
 	}
@@ -46,9 +46,9 @@ pub fn find_arm_toolchain<P: AsRef<Path>>(root: P) -> Result<PathBuf, Box<dyn Er
 		result
 	};
 
-	let path = env::var(consts::ARM_TOOLCHAIN_PATH_ENV).map_or_else(
+	let path = env::var(consts::env::ARM_TOOLCHAIN_PATH_ENV).map_or_else(
 	                                                                |err| {
-		                                                                println!("`{}` {err}.", consts::ARM_TOOLCHAIN_PATH_ENV);
+		                                                                println!("`{}` {err}.", consts::env::ARM_TOOLCHAIN_PATH_ENV);
 		                                                                find_arm_toolchain(&root.as_ref())
 	                                                                },
 	                                                                |path| {
@@ -58,14 +58,14 @@ pub fn find_arm_toolchain<P: AsRef<Path>>(root: P) -> Result<PathBuf, Box<dyn Er
 		                                                                } else {
 			                                                                println!(
 			                                                                         "cargo:warning=`{}` points to non-existing dir.",
-			                                                                         consts::ARM_TOOLCHAIN_PATH_ENV
+			                                                                         consts::env::ARM_TOOLCHAIN_PATH_ENV
 			);
 			                                                                find_arm_toolchain(&root.as_ref())
 		                                                                }
 	                                                                },
 	);
 
-	path.ok_or(std::io::Error::new(std::io::ErrorKind::NotFound, consts::ARM_TOOLCHAIN_PATH_ENV).into())
+	path.ok_or(std::io::Error::new(std::io::ErrorKind::NotFound, consts::env::ARM_TOOLCHAIN_PATH_ENV).into())
 }
 
 
@@ -81,7 +81,7 @@ pub fn try_build() -> Result<(), Box<dyn Error>> {
 	let (sdk_tags, sdk_rev) = validate_sdk(&root)?;
 
 	let (version, symbols) = api_table::find_read_api_table(&root)?;
-	crate::check_version(&version.as_deref().unwrap_or("n/a"), consts::API_VERSION.parse()?, "API");
+	crate::check_version(&version.as_deref().unwrap_or("n/a"), consts::support::API_VERSION.parse()?, "API");
 
 	let header = api_table::gen_api_table_header(&symbols)?;
 	let extra = get_extra_headers(&symbols)?;
@@ -119,7 +119,7 @@ pub fn try_build() -> Result<(), Box<dyn Error>> {
 
 		// metadata for documentation:
 		let metadata = doc_sdk_metadata_row(sdk_rev.as_ref(), &sdk_tags, version.as_ref());
-		println!("cargo:rustc-env={}={}", consts::BINDINGS_METADATA_DOC_ENV, metadata);
+		println!("cargo:rustc-env={}={}", consts::env::BINDINGS_METADATA_DOC_ENV, metadata);
 		builder = builder.raw_line(format!("/* {metadata} */"));
 
 
@@ -166,7 +166,7 @@ pub fn try_build() -> Result<(), Box<dyn Error>> {
 			        let out_path = PathBuf::from(env::var("OUT_DIR").expect("OUT_DIR cargo env var")).join(output_filename);
 			        println!("bindings output: {}", out_path.display());
 			        bindings.write_to_file(&out_path).expect("Couldn't write bindings!");
-			        println!("cargo:rustc-env={}={}", consts::BINDINGS_ENV, out_path.display().to_string());
+			        println!("cargo:rustc-env={}={}", consts::env::BINDINGS_ENV, out_path.display().to_string());
 		        })
 		        .map_err(|err| err.into())
 	};
@@ -180,15 +180,15 @@ pub fn try_build() -> Result<(), Box<dyn Error>> {
 
 	from_source(builder, &root, &header, Some(&extra)).and_then(try_build)
 	                                                  .or_else(|err| {
-		                                                  println!("cargo:warning=build from fw source faild: {err}");
+		                                                  println!("cargo:warning=build from fw source failed: {err}");
 		                                                  from_build(builder, &root, &header, Some(&extra)).and_then(try_build)
 	                                                  })
 	                                                  .or_else(|err| {
-		                                                  println!("cargo:warning=build from fw build faild: {err}");
+		                                                  println!("cargo:warning=build from fw build failed: {err}");
 		                                                  from_sdk_tree(builder, &root, debug).and_then(try_build)
 	                                                  })
 	                                                  .map_err(|err| {
-		                                                  println!("cargo:warning=build from sdk tree faild: {err}");
+		                                                  println!("cargo:warning=build from sdk tree failed: {err}");
 		                                                  err
 	                                                  })?;
 
@@ -201,7 +201,7 @@ pub fn validate_sdk<P: AsRef<Path>>(root: P) -> Result<FwVersion, Box<dyn Error>
 	         "cargo:rerun-if-changed={}",
 	         root.as_ref().join(PathBuf::from(".git/HEAD")).display()
 	);
-	check_version_git(root.as_ref(), consts::SDK_VERSION.parse()?, "SDK")
+	check_version_git(root.as_ref(), consts::support::SDK_VERSION.parse()?, "SDK")
 }
 
 // Unfortunately there are no VERSION file yet.

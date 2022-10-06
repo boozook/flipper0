@@ -98,7 +98,7 @@ pub struct FapMetadata {
 	#[serde(default)]
 	pub sources: Vec<String>,
 
-	/// Tuple, 2 numbers in form of (x,y): application version to be embedded within .fap file. Default value is (0,1), meanig version "0.1".
+	/// Tuple, 2 numbers in form of (x,y): application version to be embedded within .fap file. Default value is (0,1), meaning version "0.1".
 	/// Default is crate version.
 	#[serde(alias = "fap-version")]
 	#[serde(alias = "fap_version")]
@@ -148,8 +148,8 @@ impl Default for FapMetadata {
 			                                          if let Some(v) = patch {
 				                                          result.push(v);
 			                                          }
-			                                          if let Some(pre) = pre {
-				                                          println!("cargo:warning=Lats component of the crate version will be ignored: {pre}");
+			                                          if let Some(pre) = pre.filter(|s| s.trim().len() != 0) {
+				                                          println!("cargo:warning=Last component of the crate version will be ignored: {pre}");
 			                                          }
 			                                          result
 		                                          })

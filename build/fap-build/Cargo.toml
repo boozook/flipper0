@@ -1,0 +1,32 @@
+[package]
+name = "flipper0-fap-build"
+description = "Flipper Zero Application build utils"
+version = "0.1.0"
+edition = "2021"
+
+
+authors = ["Alex Koz <a@koz.email>"]
+documentation = "https://docs.rs/flipper0-fap-build"
+keywords = ["flipper-zero", "application", "package", "fap"]
+categories = ["development-tools::build-utils"]
+homepage = "https://github.com/boozook/flipper0/build/fap-build"
+repository = "https://github.com/boozook/flipper0.git"
+license = "MIT"
+readme = "README.md"
+
+
+[dependencies]
+crate-metadata = "0.1"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+handlebars = "4.3.5"
+
+[dependencies.build-cfg]
+package = "flipper0-build-cfg"
+version = "0.1"
+path = "../common/cfg"
+
+[dependencies.fam]
+package = "flipper0-fam-build"
+version = "^0.1"
+path = "../fam-build"

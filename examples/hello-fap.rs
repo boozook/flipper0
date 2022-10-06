@@ -31,7 +31,7 @@ pub unsafe extern "C" fn init(_: *mut u8) -> i32 {
 
 
 pub unsafe extern "C" fn draw_callback(canvas: *mut Canvas, _context: *mut c_void) {
-	static MESSAGE: &[u8] = b"Hello, FAP!";
+	static MESSAGE: &[u8] = b"Hello, Flipper!";
 	let message: &CStr = &CStr::from_ptr(MESSAGE.as_ptr() as _);
 	canvas_draw_str(canvas, 39, 31, message.as_ptr());
 }

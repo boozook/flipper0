@@ -245,7 +245,7 @@ dependencies = [
 
 [[package]]
 name = "fam"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "handlebars",
  "serde",
@@ -261,18 +261,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "flipper0-fam"
+name = "flipper0-build-cfg"
 version = "0.1.0"
-dependencies = [
- "heck",
- "proc-macro2",
- "quote",
- "syn",
-]
 
 [[package]]
 name = "flipper0-fam-build"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "crate-metadata",
  "fam",
@@ -282,11 +276,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "flipper0-fap-build"
+version = "0.1.0"
+dependencies = [
+ "crate-metadata",
+ "flipper0-build-cfg",
+ "flipper0-fam-build",
+ "handlebars",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "flipper0-sys"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "bindgen",
  "csv",
+ "flipper0-build-cfg",
  "rustygit",
  "semver",
  "wax",
@@ -329,10 +336,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a9ee70c43aaf417c914396645a0fa852624801b24ebb7ae78fe8272889ac888"
 
 [[package]]
-name = "heck"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2540771e65fc8cb83cd6e8a237f70c319bd5c29f78ed1084ba5d50eeac86f7f9"
+name = "hello-fap-build"
+version = "0.1.0"
+dependencies = [
+ "flipper0-build-cfg",
+ "flipper0-fap-build",
+ "flipper0-sys",
+]
 
 [[package]]
 name = "hello-fap-manifest"
@@ -390,9 +400,9 @@ checksum = "b71991ff56294aa922b450139ee08b3bfc70982c6b2c7562771375cf73542dd4"
 
 [[package]]
 name = "itoa"
-version = "1.0.3"
+version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c8af84674fe1f223a982c933a0ee1086ac4d4052aa0fb8060c12c6ad838e754"
+checksum = "4217ad341ebadf8d8e724e264f13e593e0648f5b3e94b3896a5df283be015ecc"
 
 [[package]]
 name = "joinery"
@@ -647,7 +657,7 @@ version = "1.0.85"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e55a28e3aaef9d5ce0506d0a14dbba8054ddc7e499ef522dd8b26859ec9d4a44"
 dependencies = [
- "itoa 1.0.3",
+ "itoa 1.0.4",
  "ryu",
  "serde",
 ]

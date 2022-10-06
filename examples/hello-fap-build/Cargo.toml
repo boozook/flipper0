@@ -1,0 +1,42 @@
+[package]
+name = "hello-fap-build"
+version = "0.1.0"
+edition = "2021"
+authors = ["Alex Koz <a@koz.email>"]
+description = "Example FAP for Flipper Zero"
+homepage = "https://github.com/boozook/flipper0/examples/hello-fap-build"
+publish = false
+
+# important things to build manifest
+build = "build.rs"
+
+
+[package.metadata.fap]
+main = "init"
+name = "Hello, Flipper"
+
+
+[lib]
+path = "../hello-fap.rs"
+crate-type = ["staticlib"]
+bench = false
+test = false
+
+
+[dependencies.flipper0-sys]
+version = "0.2"
+path = "../.."
+default-features = true
+features = []
+
+[build-dependencies.fap]
+package = "flipper0-fap-build"
+version = "*"
+path = "../../build/fap-build"
+
+# Just to get name of env-var `FLIPPER_SDK_PATH_ENV` for assertion.
+# Usually unnecessary. Just for example.
+[build-dependencies.cfg]
+package = "flipper0-build-cfg"
+version = "0.1"
+path = "../../build/common/cfg"

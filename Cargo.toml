@@ -1,13 +1,19 @@
 [workspace]
 resolver = "2"
-members = ["flipper", "format/*", "build/*", "examples/*"]
-default-members = ["flipper", ".", "build/*"]
+members = [
+	"flipper",
+	"format/*",
+	"build/*-build",
+	"build/common/*",
+	"examples/*",
+]
+default-members = ["flipper", "."]
 
 
 [package]
 name = "flipper0-sys"
 description = "Bindings for Flipper Zero fw"
-version = "0.2.2"
+version = "0.2.3"
 edition = "2021"
 
 authors = ["Alex Koz <a@koz.email>"]
@@ -29,7 +35,7 @@ include = [
 	"/.rustfmt.toml",
 	"/rust-toolchain.toml",
 	"/LICENSE",
-	"!/examples/*",
+	"/examples/*",
 ]
 
 
@@ -77,6 +83,11 @@ semver = "1.0"
 wax = "0.5"
 csv = "1.1"
 
+[build-dependencies.build-cfg]
+package = "flipper0-build-cfg"
+version = "0.1"
+path = "build/common/cfg"
+
 [build-dependencies.bindgen]
 version = "0.60.1"
 features = ["runtime", "which-rustfmt", "logging"]
@@ -87,3 +98,16 @@ default-features = true
 default-target = "thumbv7em-none-eabihf"
 targets = []
 all-features = true
+
+
+[profile.dev]
+opt-level = 'z'
+lto = true
+
+[profile.release]
+panic = "abort"
+opt-level = 'z'
+lto = true
+codegen-units = 1
+debug = false
+debug-assertions = false

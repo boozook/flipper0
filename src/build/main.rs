@@ -12,7 +12,6 @@ use std::ffi::OsStr;
 use std::path::{PathBuf, Path};
 use semver::VersionReq;
 
-mod macros;
 mod consts;
 mod api_table;
 mod source;
@@ -31,11 +30,15 @@ fn main() -> Result<(), Box<dyn Error>> {
 	if prebuild {
 		let root = env::var_os("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR cargo env var");
 		let path = PathBuf::from(&root).join("gen").join(output_filename);
-		println!("cargo:rustc-env={}={}", consts::BINDINGS_ENV, path.display().to_string());
+		println!("cargo:rustc-env={}={}", consts::env::BINDINGS_ENV, path.display().to_string());
 
 		let path = PathBuf::from(&root).join("gen").join("metadoc.txt");
 		let meta = std::fs::read_to_string(&path)?;
-		println!("cargo:rustc-env={}={}", consts::BINDINGS_METADATA_DOC_ENV, meta.trim_end());
+		println!(
+		         "cargo:rustc-env={}={}",
+		         consts::env::BINDINGS_METADATA_DOC_ENV,
+		         meta.trim_end()
+		);
 
 		return Ok(());
 	}
@@ -51,7 +54,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 	if use_remote_sdk {
 		let path = crate::source::remote_sdk::git_clone_sdk()?;
 		println!("SDK from git: {} successfully installed", path.display());
-		env::set_var(consts::FLIPPER_SDK_PATH_ENV, path);
+		env::set_var(consts::env::FLIPPER_SDK_PATH_ENV, path);
 		source::local_sdk::try_build()?;
 	}
 

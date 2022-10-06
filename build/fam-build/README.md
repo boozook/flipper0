@@ -12,10 +12,10 @@ _Cargo.toml:_
 build = "build.rs"
 # ...
 
-[package.metadata.fap]
+[package.metadata.fam]
 main = "init"
-name = "Hello, FAP"                # optional, default is crate name
-# id = "hello-fap"                 # optional, default is crate name
+name = "Hello, Flipper"            # optional, default is crate name
+# id = "hello-flipper"             # optional, default is crate name
 # type = "FlipperAppType.EXTERNAL" # optional, default is FlipperAppType.EXTERNAL
 # icon = "icon_10px.png"           # optional
 # category = "Misc"                # optional, default Misc
@@ -30,6 +30,7 @@ _build.rs:_
 fn main() {
 	let fam = fam_build::manifest().unwrap();
 	let path = fam.save_to_out_dir().unwrap();
+	// or...   fam.save_to(some other path)
 
 	println!("Exported FAM path: {}", path.display());
 }
@@ -37,5 +38,7 @@ fn main() {
 
 
 - - -
+
+[Usage Example](https://github.com/boozook/flipper0/tree/master/examples/hello-fap-manifest).
 
 [Official format documentation](https://github.com/flipperdevices/flipperzero-firmware/blob/release-candidate/documentation/AppManifests.md).
