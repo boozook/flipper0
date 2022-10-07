@@ -1,4 +1,5 @@
 #![feature(fs_try_exists)]
+#![feature(stmt_expr_attributes)]
 
 use std::fs;
 use std::env;
@@ -80,15 +81,21 @@ pub fn manifest_named<S: AsRef<str>>(filename: S) -> Result<Manifest> {
 		}
 
 		fap.ok_or(IoError::new(IoErrorKind::NotFound, "fap crate metadata"))
-		   .or_else(|_| {
-			   // try to get manifest from Flipper.toml near by Cargo.toml:
-			   let fap_toml_res = manifest_toml_from(&root.join(FLIPPER_MANIFEST_TOML));
-			   // report if both not found:
-			   if fap_toml_res.is_err() {
-				   println!("cargo:warning=Error: crate metadata not found in `{}`.", manifest.display());
-				   println!("cargo:warning=Error: `Flipper.toml` not found in `{}`.", root.display());
+		   .or_else(|_err| {
+			   #[cfg(feature = "toml")]
+			   {
+				   // try to get manifest from Flipper.toml near by Cargo.toml:
+				   let fap_toml_res = manifest_toml_from(&root.join(FLIPPER_MANIFEST_TOML));
+				   // report if both not found:
+				   if fap_toml_res.is_err() {
+					   println!("cargo:warning=Error: crate metadata not found in `{}`.", manifest.display());
+					   println!("cargo:warning=Error: `Flipper.toml` not found in `{}`.", root.display());
+				   }
+				   fap_toml_res
 			   }
-			   fap_toml_res
+
+			   #[rustfmt::skip]
+			   #[cfg(not(feature = "toml"))] { Err(_err) }
 		   })?
 	};
 
@@ -150,6 +157,7 @@ pub fn fam_out_path() -> Result<PathBuf> {
 }
 
 
+#[cfg(feature = "toml")]
 pub fn manifest_toml_from(manifest: &Path) -> Result<metadata::FapMetadata> {
 	if fs::try_exists(&manifest)? {
 		let source = fs::read_to_string(&manifest)?;
