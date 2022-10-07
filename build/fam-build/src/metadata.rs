@@ -111,9 +111,11 @@ pub struct FapMetadata {
 	#[serde(alias = "fap_version")]
 	#[serde(rename = "fap_version")]
 	pub version: Option<Vec<usize>>,
-	// version: Option<(String, String)>,
+
 	/// Path to icon relative to the crate manifest directory (crate root).
 	/// Name of a .png file, 1-bit color depth, 10x10px, to be embedded within .fap file.
+	#[serde(alias = "icon-file")]
+	#[serde(alias = "icon_file")]
 	#[serde(alias = "fap-icon")]
 	#[serde(rename = "fap_icon")]
 	pub icon: Option<String>,

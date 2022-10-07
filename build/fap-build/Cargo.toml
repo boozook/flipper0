@@ -1,7 +1,7 @@
 [package]
 name = "flipper0-fap-build"
 description = "Flipper Zero Application build utils"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 
 
@@ -28,5 +28,10 @@ path = "../common/cfg"
 
 [dependencies.fam]
 package = "flipper0-fam-build"
-version = "0.1.2"
+version = "0.1.3"
 path = "../fam-build"
+
+# [dependencies.fbt]
+# version = "^0.1"
+# package = "fbt-runner"
+# path = "../fbt-runner"

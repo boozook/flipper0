@@ -20,7 +20,7 @@ main = "init"
 name = "Hello, Flipper"            # optional, default is crate name
 # id = "hello-flipper"             # optional, default is crate name
 # type = "FlipperAppType.EXTERNAL" # optional, default is FlipperAppType.EXTERNAL
-# icon = "icon_10px.png"           # optional
+# icon-file = "icon_10px.png"      # optional, path relative to the root of crate
 # category = "Misc"                # optional, default Misc
 
 [build-dependencies.fam-build]
