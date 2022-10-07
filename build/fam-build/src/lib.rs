@@ -1,7 +1,6 @@
 #![feature(fs_try_exists)]
 #![feature(stmt_expr_attributes)]
 
-use std::fs;
 use std::env;
 use std::path::Path;
 use std::path::PathBuf;
@@ -22,9 +21,10 @@ use metadata::Metadata;
 type Error = Box<dyn std::error::Error>;
 type Result<T = (), E = self::Error> = std::result::Result<T, E>;
 
+#[cfg(feature = "toml")]
+const FLIPPER_MANIFEST_TOML: &str = "Flipper.toml";
 const CARGO_MANIFEST: &str = "Cargo.toml";
 const TARGET_KIND: &str = "staticlib";
-const FLIPPER_MANIFEST_TOML: &str = "Flipper.toml";
 const FAM_FILENAME: &str = "application.fam";
 const FLIPPER_TRIPLE: &str = "thumbv7em-none-eabihf";
 
@@ -159,6 +159,8 @@ pub fn fam_out_path() -> Result<PathBuf> {
 
 #[cfg(feature = "toml")]
 pub fn manifest_toml_from(manifest: &Path) -> Result<metadata::FapMetadata> {
+	use std::fs;
+
 	if fs::try_exists(&manifest)? {
 		let source = fs::read_to_string(&manifest)?;
 		let mut data = toml::from_str::<metadata::MetadataStandalone>(&source)?.package;
