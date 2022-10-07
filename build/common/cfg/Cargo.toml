@@ -1,7 +1,13 @@
 [package]
 name = "flipper0-build-cfg"
+description = "Constants & values for Flipper0 build utils"
 version = "0.1.0"
 edition = "2021"
 
-
-[dependencies]
+authors = ["Alex Koz <a@koz.email>"]
+documentation = "https://docs.rs/flipper0-build-cfg"
+keywords = ["flipper-zero", "utils"]
+categories = ["development-tools::build-utils"]
+homepage = "https://github.com/boozook/flipper0/tree/master/build/common/cfg/"
+repository = "https://github.com/boozook/flipper0.git"
+license = "MIT"

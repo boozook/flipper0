@@ -9,7 +9,7 @@ authors = ["Alex Koz <a@koz.email>"]
 documentation = "https://docs.rs/flipper0-fam-build"
 keywords = ["flipper-zero", "manifest", "fam", "metadata"]
 categories = ["development-tools::build-utils"]
-homepage = "https://github.com/boozook/flipper0/build/fam-build"
+homepage = "https://github.com/boozook/flipper0/tree/master/build/fam-build"
 repository = "https://github.com/boozook/flipper0.git"
 license = "MIT"
 readme = "README.md"
@@ -22,5 +22,5 @@ serde_json = "1.0"
 handlebars = "4.3.5"
 
 [dependencies.fam]
-version = "^0.1"
+version = "0.1.1"
 path = "../../format/fam"

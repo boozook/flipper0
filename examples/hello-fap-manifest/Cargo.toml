@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 authors = ["Alex Koz <a@koz.email>"]
 description = "Example FAP for Flipper Zero"
-homepage = "https://github.com/boozook/flipper0/examples/hello-fap-manifest"
+homepage = "https://github.com/boozook/flipper0/tree/master/examples/hello-fap-manifest"
 publish = false
 
 # important things to build manifest

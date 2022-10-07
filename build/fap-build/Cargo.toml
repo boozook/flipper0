@@ -9,7 +9,7 @@ authors = ["Alex Koz <a@koz.email>"]
 documentation = "https://docs.rs/flipper0-fap-build"
 keywords = ["flipper-zero", "application", "package", "fap"]
 categories = ["development-tools::build-utils"]
-homepage = "https://github.com/boozook/flipper0/build/fap-build"
+homepage = "https://github.com/boozook/flipper0/tree/master/build/fap-build"
 repository = "https://github.com/boozook/flipper0.git"
 license = "MIT"
 readme = "README.md"
@@ -28,5 +28,5 @@ path = "../common/cfg"
 
 [dependencies.fam]
 package = "flipper0-fam-build"
-version = "^0.1"
+version = "0.1.1"
 path = "../fam-build"

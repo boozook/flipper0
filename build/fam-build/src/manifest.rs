@@ -29,8 +29,8 @@ impl From<Value> for Manifest {
 impl Manifest {
 	pub fn id(&self) -> Option<&str> {
 		match self {
-			Manifest::Metadata(ref metadata) => metadata.id.as_deref(),
-			Manifest::Manifest(ref manifest) => manifest.appid(),
+			Manifest::Metadata(metadata) => metadata.id.as_deref(),
+			Manifest::Manifest(manifest) => manifest.appid(),
 		}
 	}
 
