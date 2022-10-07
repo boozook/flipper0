@@ -43,7 +43,7 @@ impl Manifest {
 	pub fn try_to_string(&self) -> Result<String> {
 		let source = match self {
 			Manifest::Manifest(manifest) => manifest.try_to_string()?,
-			Manifest::Metadata(metadata) => fam::render_raw(&serde_json::to_value(&metadata)?)?,
+			Manifest::Metadata(metadata) => fam::render_raw_json(&serde_json::to_value(&metadata)?)?,
 		};
 
 		Ok(source)

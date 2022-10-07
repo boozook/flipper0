@@ -1,3 +1,6 @@
+#![feature(fs_try_exists)]
+
+use std::fs;
 use std::env;
 use std::path::Path;
 use std::path::PathBuf;
@@ -15,17 +18,12 @@ use manifest::Manifest;
 use metadata::Metadata;
 
 
-// TODO: two possible sources:
-// - [ ] flipper.toml near by crate manifest
-// - [x] crate metadata in the crate manifest
-
-
 type Error = Box<dyn std::error::Error>;
 type Result<T = (), E = self::Error> = std::result::Result<T, E>;
 
 const CARGO_MANIFEST: &str = "Cargo.toml";
 const TARGET_KIND: &str = "staticlib";
-
+const FLIPPER_MANIFEST_TOML: &str = "Flipper.toml";
 const FAM_FILENAME: &str = "application.fam";
 const FLIPPER_TRIPLE: &str = "thumbv7em-none-eabihf";
 
@@ -34,7 +32,7 @@ const FLIPPER_TRIPLE: &str = "thumbv7em-none-eabihf";
 /// Call typically from your build script.
 pub fn manifest() -> Result<Manifest> { manifest_named(CARGO_MANIFEST) }
 
-/// With custom manifest file name.
+/// With custom crate manifest file name. Typically that is `Cargo.toml`.
 pub fn manifest_named<S: AsRef<str>>(filename: S) -> Result<Manifest> {
 	let root = crate_root()?;
 	let manifest = root.join(filename.as_ref());
@@ -80,7 +78,18 @@ pub fn manifest_named<S: AsRef<str>>(filename: S) -> Result<Manifest> {
 			}
 			fap = meta.fap.take();
 		}
-		fap.ok_or(IoError::new(IoErrorKind::NotFound, "fap metadata"))?
+
+		fap.ok_or(IoError::new(IoErrorKind::NotFound, "fap crate metadata"))
+		   .or_else(|_| {
+			   // try to get manifest from Flipper.toml near by Cargo.toml:
+			   let fap_toml_res = manifest_toml_from(&root.join(FLIPPER_MANIFEST_TOML));
+			   // report if both not found:
+			   if fap_toml_res.is_err() {
+				   println!("cargo:warning=Error: crate metadata not found in `{}`.", manifest.display());
+				   println!("cargo:warning=Error: `Flipper.toml` not found in `{}`.", root.display());
+			   }
+			   fap_toml_res
+		   })?
 	};
 
 	Ok(fap_metadata.into())
@@ -138,4 +147,16 @@ pub fn crate_authors() -> Result<String> { env::var("CARGO_PKG_AUTHORS").map_err
 pub fn fam_out_path() -> Result<PathBuf> {
 	env::var("OUT_DIR").map(|p| PathBuf::from(p).join(FAM_FILENAME))
 	                   .map_err(Into::into)
+}
+
+
+pub fn manifest_toml_from(manifest: &Path) -> Result<metadata::FapMetadata> {
+	if fs::try_exists(&manifest)? {
+		let source = fs::read_to_string(&manifest)?;
+		let mut data = toml::from_str::<metadata::MetadataStandalone>(&source)?.package;
+		data.set_defaults()?;
+		Ok(data)
+	} else {
+		Err(IoError::new(IoErrorKind::NotFound, manifest.display().to_string()).into())
+	}
 }

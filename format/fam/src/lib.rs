@@ -48,7 +48,11 @@ App(
 #[derive(Serialize, Deserialize)]
 pub enum Manifest {
 	/// For custom fields.
-	Raw(Value),
+	Json(Value),
+
+	#[cfg(feature = "toml")]
+	/// For custom fields.
+	Toml(toml::Value),
 
 	Struct {
 		/// Name that is displayed in menus
@@ -138,7 +142,9 @@ pub enum Manifest {
 impl Manifest {
 	pub fn try_to_string(&self) -> Result<String, RenderError> {
 		match self {
-			Manifest::Raw(json) => render_raw(&json),
+			#[cfg(feature = "toml")]
+			Manifest::Toml(toml) => render_raw_toml(&toml),
+			Manifest::Json(json) => render_raw_json(&json),
 			Manifest::Struct { name,
 			                   appid,
 			                   apptype,
@@ -183,7 +189,7 @@ impl Manifest {
 					"fap_author": fap_author,
 					"fap_weburl": fap_weburl,
 				});
-				render_raw(&json)
+				render_raw_json(&json)
 			},
 		}
 	}
@@ -191,13 +197,18 @@ impl Manifest {
 
 
 macro_rules! field {
-	// ($key:ident, $ty:ty) => {
 	($key:ident, str) => {
 		pub fn $key(&self) -> Option<&str> {
 			match self {
 				Self::Struct { $key, .. } => Some($key.as_str()),
-				Self::Raw(value) => {
+				Self::Json(value) => {
 					value.as_object()
+					     .map(|o| o.get(stringify!($key)).map(|v| v.as_str()).flatten())
+					     .flatten()
+				},
+				#[cfg(feature = "toml")]
+				Self::Toml(value) => {
+					value.as_table()
 					     .map(|o| o.get(stringify!($key)).map(|v| v.as_str()).flatten())
 					     .flatten()
 				},
@@ -209,8 +220,14 @@ macro_rules! field {
 		pub fn $key(&self) -> Option<&str> {
 			match self {
 				Self::Struct { $key, .. } => Some($key.as_deref()).flatten(),
-				Self::Raw(value) => {
+				Self::Json(value) => {
 					value.as_object()
+					     .map(|o| o.get(stringify!($key)).map(|v| v.as_str()).flatten())
+					     .flatten()
+				},
+				#[cfg(feature = "toml")]
+				Self::Toml(value) => {
+					value.as_table()
 					     .map(|o| o.get(stringify!($key)).map(|v| v.as_str()).flatten())
 					     .flatten()
 				},
@@ -222,7 +239,7 @@ macro_rules! field {
 		pub fn $key(&self) -> Box<dyn Iterator<Item = String> + '_> {
 			match self {
 				Self::Struct { $key, .. } => box $key.into_iter().cloned(),
-				Self::Raw(value) => {
+				Self::Json(value) => {
 					box value.as_object()
 					         .map(|o| {
 						         o.get(stringify!($key))
@@ -233,6 +250,8 @@ macro_rules! field {
 					         .map(|arr| arr.into_iter())
 					         .unwrap_or(Vec::with_capacity(0).into_iter().into())
 				},
+				#[cfg(feature = "toml")]
+				Self::Toml(value) => todo!(), // TODO: toml::Value as vec to iter
 			}
 		}
 	};
@@ -262,11 +281,34 @@ impl Manifest {
 	pub fn fap_version(&self) -> Option<(String, String)> {
 		match self {
 			Self::Struct { fap_version, .. } => fap_version.to_owned(),
-			Self::Raw(value) => {
+			Self::Json(value) => {
 				value.as_object()
 				     .map(|o| {
 					     o.get("fap_version")
 					      .map(|v| serde_json::from_value::<(String, String)>(v.to_owned()).ok())
+					      .flatten()
+				     })
+				     .flatten()
+			},
+			#[cfg(feature = "toml")]
+			Self::Toml(value) => {
+				value.as_table()
+				     .map(|o| {
+					     o.get("fap_version")
+					      .map(|v| {
+						      v.as_array()
+						       .map(|arr| {
+							       arr.get(0)
+							          .map(|a| {
+								          arr.get(1)
+								             .map(|b| (a.as_str().map(ToOwned::to_owned), b.as_str().map(ToOwned::to_owned)))
+								             .filter(|(a, b)| a.is_some() && b.is_some())
+								             .map(|(a, b)| (a.unwrap(), b.unwrap()))
+							          })
+							          .flatten()
+						       })
+						       .flatten()
+					      })
 					      .flatten()
 				     })
 				     .flatten()
@@ -277,11 +319,23 @@ impl Manifest {
 
 
 impl From<Value> for Manifest {
-	fn from(metadata: Value) -> Self { Self::Raw(metadata) }
+	fn from(metadata: Value) -> Self { Self::Json(metadata) }
 }
 
 
-pub fn render_raw(json: &Value) -> Result<String, RenderError> {
+pub fn render_raw_json(json: &Value) -> Result<String, RenderError> {
 	let reg = Handlebars::new();
 	reg.render_template(TEMPLATE, json)
+}
+
+
+#[cfg(feature = "toml")]
+impl From<toml::Value> for Manifest {
+	fn from(metadata: toml::Value) -> Self { Self::Toml(metadata) }
+}
+
+#[cfg(feature = "toml")]
+pub fn render_raw_toml(toml: &toml::Value) -> Result<String, RenderError> {
+	let reg = Handlebars::new();
+	reg.render_template(TEMPLATE, toml)
 }

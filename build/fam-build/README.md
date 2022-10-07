@@ -1,6 +1,9 @@
 # Flipper Zero Application Manifest __Generator__
 
-Builds FAM from metadata in the crate manifest (usually Cargo.toml).
+Builds FAM from one of two possible sources:
+- Metadata in the crate manifest (usually Cargo.toml)
+- Flipper.toml near by crate manifest
+
 Uses `cargo metadata`.
 
 

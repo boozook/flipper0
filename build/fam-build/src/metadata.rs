@@ -10,7 +10,14 @@ const DEFAULT_CATEGORY: &str = "Misc";
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Metadata {
+	#[serde(alias = "fam")]
+	#[serde(alias = "flipper")]
 	pub fap: Option<FapMetadata>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct MetadataStandalone {
+	pub package: FapMetadata,
 }
 
 
