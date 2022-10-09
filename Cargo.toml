@@ -76,7 +76,7 @@ macro = ["proc-macros", "proc-macros/export-fam-infallible"]
 
 [dependencies.proc-macros]
 package = "flipper0-macro"
-version = "*"
+version = "0.1"
 path = "build/proc-macro"
 optional = true
 
