@@ -13,7 +13,7 @@ After this you can just execute `./fbt firmware_{fap-id}` from the root [flipper
 `$FLIPPER_REPO_PATH` should points to working copy of the flipperzero-firmware repository.
 
 
-__[Example](https://github.com/boozook/flipper0/tree/master/examples/hello-fap-build/).__
+__[Example](https://github.com/boozook/flipper0/tree/master/examples/app-build/).__
 
 
 [fam]: https://crates.io/crates/fam

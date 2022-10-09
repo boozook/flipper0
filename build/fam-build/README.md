@@ -39,9 +39,23 @@ fn main() {
 }
 ```
 
+### Entry-point `main`
+
+Metadata field `package.metadata.fam.main` is required by default.
+
+But it's __optional__ if feature `optional_entry_point` enabled.
+That optionality needed in cases when this used in couple with [macro crate][flipper0-macro] that also writes to manifest. So you can omit `package.metadata.fam.main` in that case.
+
+
+## Examples
+
+- [Usage example with crate metadata](https://github.com/boozook/flipper0/tree/master/examples/app-manifest-meta).
+- [Usage example with Flipper.toml](https://github.com/boozook/flipper0/tree/master/examples/app-manifest-toml).
+
 
 - - -
 
-[Usage Example](https://github.com/boozook/flipper0/tree/master/examples/hello-fap-manifest).
-
 [Official format documentation](https://github.com/flipperdevices/flipperzero-firmware/blob/release-candidate/documentation/AppManifests.md).
+
+
+[flipper0-macro]: https://crates.io/crates/flipper0-macro

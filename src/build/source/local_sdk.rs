@@ -46,24 +46,25 @@ pub fn find_arm_toolchain<P: AsRef<Path>>(root: P) -> Result<PathBuf, Box<dyn Er
 		result
 	};
 
-	let path = env::var(consts::env::ARM_TOOLCHAIN_PATH_ENV).map_or_else(
-	                                                                |err| {
-		                                                                println!("`{}` {err}.", consts::env::ARM_TOOLCHAIN_PATH_ENV);
-		                                                                find_arm_toolchain(&root.as_ref())
-	                                                                },
-	                                                                |path| {
-		                                                                let path = PathBuf::from(path);
-		                                                                if path.exists() && path.is_dir() {
-			                                                                Some(path)
-		                                                                } else {
-			                                                                println!(
-			                                                                         "cargo:warning=`{}` points to non-existing dir.",
-			                                                                         consts::env::ARM_TOOLCHAIN_PATH_ENV
-			);
-			                                                                find_arm_toolchain(&root.as_ref())
-		                                                                }
-	                                                                },
-	);
+	let path =
+		env::var(consts::env::ARM_TOOLCHAIN_PATH_ENV).map_or_else(
+		                                                          |err| {
+			                                                          println!("`{}` {err}.", consts::env::ARM_TOOLCHAIN_PATH_ENV);
+			                                                          find_arm_toolchain(&root.as_ref())
+		                                                          },
+		                                                          |path| {
+			                                                          let path = PathBuf::from(path);
+			                                                          if path.exists() && path.is_dir() {
+				                                                          Some(path)
+			                                                          } else {
+				                                                          println!(
+				                                                                   "cargo:warning=`{}` points to non-existing dir.",
+				                                                                   consts::env::ARM_TOOLCHAIN_PATH_ENV
+				);
+				                                                          find_arm_toolchain(&root.as_ref())
+			                                                          }
+		                                                          },
+		);
 
 	path.ok_or(std::io::Error::new(std::io::ErrorKind::NotFound, consts::env::ARM_TOOLCHAIN_PATH_ENV).into())
 }
@@ -81,7 +82,11 @@ pub fn try_build() -> Result<(), Box<dyn Error>> {
 	let (sdk_tags, sdk_rev) = validate_sdk(&root)?;
 
 	let (version, symbols) = api_table::find_read_api_table(&root)?;
-	crate::check_version(&version.as_deref().unwrap_or("n/a"), consts::support::API_VERSION.parse()?, "API");
+	crate::check_version(
+	                     &version.as_deref().unwrap_or("n/a"),
+	                     consts::support::API_VERSION.parse()?,
+	                     "API",
+	);
 
 	let header = api_table::gen_api_table_header(&symbols)?;
 	let extra = get_extra_headers(&symbols)?;
@@ -166,7 +171,11 @@ pub fn try_build() -> Result<(), Box<dyn Error>> {
 			        let out_path = PathBuf::from(env::var("OUT_DIR").expect("OUT_DIR cargo env var")).join(output_filename);
 			        println!("bindings output: {}", out_path.display());
 			        bindings.write_to_file(&out_path).expect("Couldn't write bindings!");
-			        println!("cargo:rustc-env={}={}", consts::env::BINDINGS_ENV, out_path.display().to_string());
+			        println!(
+			                 "cargo:rustc-env={}={}",
+			                 consts::env::BINDINGS_ENV,
+			                 out_path.display().to_string()
+			);
 		        })
 		        .map_err(|err| err.into())
 	};

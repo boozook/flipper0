@@ -3,26 +3,27 @@ use serde::Deserialize;
 use serde::Serialize;
 
 
-const DEFAULT_MAIN: &str = "main";
+/// Default entry-point name.
+pub const DEFAULT_MAIN: &str = "main";
 const DEFAULT_TYPE: &str = "FlipperAppType.EXTERNAL";
 const DEFAULT_CATEGORY: &str = "Misc";
 
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Metadata {
 	#[serde(alias = "fam")]
 	#[serde(alias = "flipper")]
 	pub fap: Option<FapMetadata>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct MetadataStandalone {
 	pub package: FapMetadata,
 }
 
 
 /// Same as `fam::Manifest` but more with optional fields that required there.
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct FapMetadata {
 	/// Name that is displayed in menus
 	pub name: Option<String>,
@@ -62,12 +63,20 @@ pub struct FapMetadata {
 	pub icon_builtin: Option<String>,
 
 	/// C function to be used as application's entry point
-	// TODO: Default determined via build-script.
 	#[serde(rename = "entry_point")]
 	#[serde(alias = "entry-point")]
 	#[serde(alias = "start")]
 	#[serde(alias = "main")]
+	#[cfg(not(feature = "optional_entry_point"))]
 	pub main: String,
+
+	/// C function to be used as application's entry point
+	#[serde(rename = "entry_point")]
+	#[serde(alias = "entry-point")]
+	#[serde(alias = "start")]
+	#[serde(alias = "main")]
+	#[cfg(feature = "optional_entry_point")]
+	pub main: Option<String>,
 
 	/// Internal flags for system apps. Do not use.
 	#[serde(default)]
@@ -172,7 +181,10 @@ impl Default for FapMetadata {
 		                                        .map(|s| s.trim().to_owned())
 		                                        .filter(|s| !s.is_empty()),
 		       name: crate::crate_name().ok(),
+		       #[cfg(not(feature = "optional_entry_point"))]
 		       main: DEFAULT_MAIN.to_owned(),
+		       #[cfg(feature = "optional_entry_point")]
+		       main: None,
 		       icon: None,
 		       category: Some(DEFAULT_CATEGORY.to_owned()),
 		       stack_size: None,

@@ -40,3 +40,10 @@ pub mod sys {
 		unsafe { (*(furi_crash as *const c_void as *const unsafe extern "C" fn(*const c_char) -> !))(message) }
 	}
 }
+
+
+// re-export proc-macros:
+#[allow(unused_imports)]
+#[macro_use]
+extern crate proc_macros;
+pub use proc_macros::*;

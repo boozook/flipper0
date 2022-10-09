@@ -1,0 +1,52 @@
+[package]
+name = "flipper0-macro"
+description = "Macro util for Flipper0 Application Package"
+version = "0.1.0"
+edition = "2021"
+
+authors = ["Alex Koz <a@koz.email>"]
+documentation = "https://docs.rs/flipper0-macro"
+keywords = [
+	"flipper-zero",
+	"application",
+	"package",
+	"fap",
+	"main",
+	"entry-point",
+]
+categories = ["development-tools::build-utils"]
+homepage = "https://github.com/boozook/flipper0/tree/master/build/proc-macro"
+repository = "https://github.com/boozook/flipper0.git"
+license = "MIT"
+readme = "README.md"
+
+
+[lib]
+proc-macro = true
+
+
+[features]
+default = ["export-fam-infallible"]
+export-fam = []
+export-fam-infallible = ["export-fam"]
+
+
+[dependencies]
+proc-macro2 = "1.0"
+quote = "1.0"
+
+serde_json = "1.0"
+
+[dependencies.serde]
+version = "1.0"
+features = ["derive"]
+
+[dependencies.syn]
+version = "1.0"
+features = ["full"]
+
+[dependencies.fam]
+package = "flipper0-fam-build"
+version = "0.1.4"
+path = "../fam-build"
+features = ["optional_entry_point"]

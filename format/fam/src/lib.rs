@@ -45,7 +45,7 @@ App(
 // TODO: Non-strict template for render as-is to **kwargs.
 
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub enum Manifest {
 	/// For custom fields.
 	Json(Value),

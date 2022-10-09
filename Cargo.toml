@@ -13,7 +13,7 @@ default-members = ["flipper", "."]
 [package]
 name = "flipper0-sys"
 description = "Bindings for Flipper Zero fw"
-version = "0.2.3"
+version = "0.2.4"
 edition = "2021"
 
 authors = ["Alex Koz <a@koz.email>"]
@@ -52,14 +52,9 @@ name = "hello-fap"
 path = "examples/hello-fap.rs"
 crate-type = ["staticlib"]
 
-# [[example]]
-# name = "hello-fap-manifest"
-# # crate-type = ["staticlib"]
-# path = "examples/hello-fap-manifest/src/lib.rs"
-
 
 [features]
-default = ["allocator", "panic", "prebuild", "use-local-sdk"]
+default = ["allocator", "panic", "prebuild", "use-local-sdk", "macro"]
 # parts:
 allocator = [] # global allocator impl
 panic = []     # panic handler
@@ -75,6 +70,15 @@ derive-hash = []
 derive-ord = []
 derive-partialeq = []
 derive-partialord = []
+# extras:
+macro = ["proc-macros", "proc-macros/export-fam-infallible"]
+
+
+[dependencies.proc-macros]
+package = "flipper0-macro"
+version = "*"
+path = "build/proc-macro"
+optional = true
 
 
 [build-dependencies]

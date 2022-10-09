@@ -16,8 +16,10 @@ extern crate fam;
 mod manifest;
 mod metadata;
 
-use manifest::Manifest;
-use metadata::Metadata;
+pub use manifest::Manifest;
+pub use manifest::IntermediateManifest;
+pub use metadata::Metadata;
+pub use metadata::DEFAULT_MAIN;
 
 
 type Error = Box<dyn std::error::Error>;
@@ -109,8 +111,8 @@ pub fn manifest_named<S: AsRef<str>>(filename: S) -> Result<Manifest> {
 /// Output directory with compilation product.
 /// Typically is `target/{triple}/{profile}/lib{name}.a`.
 pub fn crate_product(dir: &Path, target: &meta::Target) -> Result<PathBuf> {
-	let triple = env::var("TARGET")?;
-	let profile = env::var("PROFILE")?;
+	let triple = current_target()?;
+	let profile = current_profile()?;
 	let path = if triple == FLIPPER_TRIPLE {
 		dir.join(&triple).join(&profile)
 	} else {
@@ -125,6 +127,37 @@ pub fn crate_product(dir: &Path, target: &meta::Target) -> Result<PathBuf> {
 
 
 fn staticlib_name_to_filename(name: &str) -> String { format!("lib{name}.a").replace("-", "_") }
+
+
+pub fn current_target() -> Result<String> {
+	env::var("TARGET").map(|target| {
+		                  // re-share variable for future possible usage from macro (if used)
+		                  println!("cargo:rustc-env=TARGET={target}");
+		                  target
+	                  })
+	                  .or_else(|_| {
+		                  let mut found = false;
+		                  let mut result = None;
+		                  for (_, arg) in std::env::args().enumerate() {
+			                  if !found && arg == "--target" {
+				                  found = true;
+			                  } else if found {
+				                  result = Some(arg);
+				                  break;
+			                  }
+		                  }
+		                  result.ok_or(env::VarError::NotPresent.into())
+	                  })
+}
+
+pub fn current_profile() -> Result<String> {
+	env::var("PROFILE").map(|profile| {
+		                   // re-share variable for future possible usage from macro (if used)
+		                   println!("cargo:rustc-env=PROFILE={profile}");
+		                   profile
+	                   })
+	                   .map_err(Into::into)
+}
 
 
 pub fn crate_name() -> Result<String> { env::var("CARGO_PKG_NAME").map_err(Into::into) }
