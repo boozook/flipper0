@@ -46,9 +46,9 @@ impl Manifest {
 	}
 
 	#[cfg(not(feature = "optional_entry_point"))]
-	pub fn main(&self) -> &str {
+	pub fn main(&self) -> Option<&str> {
 		match self {
-			Manifest::Metadata(metadata) => &metadata.main,
+			Manifest::Metadata(metadata) => Some(&metadata.main),
 			Manifest::Manifest(manifest) => manifest.entry_point(),
 		}
 	}
