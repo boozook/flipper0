@@ -65,7 +65,7 @@ impl Manifest {
 	pub fn save_to_out_dir(&self) -> Result<PathBuf> { crate::fam_out_path().and_then(|path| self.save_to(&path).map(|_| path)) }
 
 	pub fn save_to<P: AsRef<Path>>(&self, path: P) -> Result {
-		let result = std::fs::write(&path, self.to_python_string()?).map_err(Into::into);
+		let result = std::fs::write(&path, self.to_fam_string()?).map_err(Into::into);
 
 		{
 			// Also we should save it in json format for internal purposes
@@ -79,7 +79,7 @@ impl Manifest {
 	}
 
 
-	fn to_python_string(&self) -> Result<String> {
+	fn to_fam_string(&self) -> Result<String> {
 		let source = match self {
 			Manifest::Manifest(manifest) => manifest.try_to_string()?,
 			Manifest::Metadata(metadata) => fam::render_raw_json(&serde_json::to_value(&metadata)?)?,

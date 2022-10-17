@@ -1,6 +1,6 @@
 #![feature(box_syntax)]
 /*! Flipper Application Manifest struct
-	 and (de)serialization methods and for export to python `App` struct.
+	 and (de)serialization methods and for export to fam `App` struct.
 
 	 [Official documentation](https://github.com/flipperdevices/flipperzero-firmware/blob/release-candidate/documentation/AppManifests.md)
 */

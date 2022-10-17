@@ -13,7 +13,7 @@ default-members = ["flipper", "."]
 [package]
 name = "flipper0-sys"
 description = "Bindings for Flipper Zero fw"
-version = "0.2.4"
+version = "0.2.5"
 edition = "2021"
 
 authors = ["Alex Koz <a@koz.email>"]
@@ -35,7 +35,7 @@ include = [
 	"/.rustfmt.toml",
 	"/rust-toolchain.toml",
 	"/LICENSE",
-	"/examples/*",
+	"!/examples/*",
 ]
 
 
@@ -54,10 +54,19 @@ crate-type = ["staticlib"]
 
 
 [features]
-default = ["allocator", "panic", "prebuild", "use-local-sdk", "macro"]
+default = [
+	"allocator-global",
+	"oom-global",
+	"panic",
+	"prebuild",
+	"use-local-sdk",
+	"macro",
+]
 # parts:
-allocator = [] # global allocator impl
-panic = []     # panic handler
+allocator = []                   # allocator impl
+allocator-global = ["allocator"] # global allocator impl
+oom-global = []                  # global out-of-memory handler
+panic = []                       # global panic handler
 # build methods:
 prebuild = []       # use pregenerated bindings
 use-local-sdk = []  # look at `FLIPPER_REPO_PATH`, try to build from source
@@ -70,6 +79,7 @@ derive-hash = []
 derive-ord = []
 derive-partialeq = []
 derive-partialord = []
+derive-debug = []      # derive Debug, default for debug profile
 # extras:
 macro = ["proc-macros", "proc-macros/export-fam-infallible"]
 

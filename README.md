@@ -59,6 +59,7 @@ FLIPPER_REPO_BRANCH=release cargo build
 ### Features:
 
 - `allocator`: default, include global allocator implementation
+  - `oom`: default, out-of-mem handler. Disable it to use you custom handler or `#![feature(default_alloc_error_handler)]`.
 - `panic`: default, include global panic & OoM handler
 
 Build methods features:
@@ -88,7 +89,7 @@ _`prebuild` is default feature just for ability to build crate out-of-the-box._
   - [ ] gen from product of `fbt sdk_tree`
   - [ ] get from web by api_symbols.csv with opaque types, without requirement of SDK.
 - [ ] tool for apps to build & link elf (with or without fbt)
-- [ ] __examples__
+- [x] __examples__
 - [ ] proper documentation
 - [ ] split api to modules under feature-gates, like "furi" or "gpio".
 - [ ] __tests__

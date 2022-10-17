@@ -21,11 +21,17 @@ bench = false
 test = false
 
 
+[features]
+default = ["prebuild"]
+# build methods:
+prebuild = ["flipper0-sys/prebuild"]             # use pregenerated bindings
+use-local-sdk = ["flipper0-sys/use-local-sdk"]   # try to build from source
+use-remote-sdk = ["flipper0-sys/use-remote-sdk"] # build from remote git repo (slow)
+
+
 [dependencies.flipper0-sys]
 version = "*"
 path = "../.."
-default-features = true
-features = []
 
 [build-dependencies.fap]
 package = "flipper0-fap-build"
