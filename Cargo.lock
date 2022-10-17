@@ -263,6 +263,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "fap-build-example"
+version = "0.1.0"
+dependencies = [
+ "flipper0-build-cfg",
+ "flipper0-fap-build",
+ "flipper0-sys",
+]
+
+[[package]]
+name = "fap-manifest-metadata-example"
+version = "0.1.0"
+dependencies = [
+ "flipper0-fam-build",
+ "flipper0-sys",
+]
+
+[[package]]
+name = "fap-manifest-toml-example"
+version = "0.1.0"
+dependencies = [
+ "flipper0-fam-build",
+ "flipper0-sys",
+]
+
+[[package]]
 name = "flipper0"
 version = "0.3.1"
 dependencies = [
@@ -373,31 +398,6 @@ dependencies = [
  "flipper0",
  "flipper0-build-cfg",
  "flipper0-fap-build",
-]
-
-[[package]]
-name = "hello-fap-build"
-version = "0.1.0"
-dependencies = [
- "flipper0-build-cfg",
- "flipper0-fap-build",
- "flipper0-sys",
-]
-
-[[package]]
-name = "hello-fap-manifest"
-version = "0.1.0"
-dependencies = [
- "flipper0-fam-build",
- "flipper0-sys",
-]
-
-[[package]]
-name = "hello-fap-manifest-toml"
-version = "0.1.0"
-dependencies = [
- "flipper0-fam-build",
- "flipper0-sys",
 ]
 
 [[package]]

@@ -51,7 +51,7 @@ macro = ["sys/macro"]
 
 [dependencies.sys]
 package = "flipper0-sys"
-version = "0.2.6"
+version = "0.2.7"
 path = ".."
 default-features = false
 features = ["derive-debug"]

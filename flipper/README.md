@@ -1,7 +1,26 @@
 # API for Flipper Zero
 
-Currently just reexports low-level bindings.
-Also re-shares `#[main]` macro.
+## Crate contains
+
+- Reexports low-level bindings
+- Re-shares `#[main]` macro
+- File System rusty API
+- Some things such as stdout, print(ln), OsString, etc..
+
+Not yet implemented:
+
+- [ ] Threading rusty API
+- [ ] Async-await on top of above
+- [ ] Neat logging
+- [ ] Some little things like `PathBuf`.
 
 
-See documentation for [sys crate](https://crates.io/crates/flipper0-sys).
+For detailed information see:
+
+- [Examples][]
+- [Sys crate][]
+
+
+
+[Examples]: https://github.com/boozook/flipper0/blob/master/examples/
+[Sys crate]: https://crates.io/crates/flipper0-sys

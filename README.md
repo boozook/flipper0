@@ -8,6 +8,9 @@ Useful for:
 - Fw modules, services and built-in apps because there are building from source, so includes all symbols (use feature `all-symbols`)
 
 
+__`---> `[Examples][]` <---`__
+
+
 ## State
 
 ![Maintenance Status](https://img.shields.io/badge/maintenance-actively--developed-brightgreen.svg)
@@ -15,7 +18,7 @@ Useful for:
 Current state of the project is WiP. _Highlly & dirty work-in-progress._
 Any contribution are appreciated, you know.
 
-Supported (means "tested with") fw version: __0.68.1__ but should work normally with any 0.68.x without `prebuild` feature.
+Supported (means "tested with") fw version: __0.69.0__ but should work normally with any 0.68.x-0.69.x without `prebuild` feature.
 
 
 ## Prerequisites
@@ -76,3 +79,4 @@ _`prebuild` is default feature just for ability to build crate out-of-the-box._
 
 [bingen+clang]: https://github.com/rust-lang/rust-bindgen/issues/918
 [Flipper Zero Fw]: https://github.com/flipperdevices/flipperzero-firmware/
+[examples]: https://github.com/boozook/flipper0/blob/master/examples/

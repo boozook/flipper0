@@ -3,6 +3,7 @@ App(
     name="Hello, Flipper",
     entry_point="init",
     sources=["libhello_fap.a"],
+    requires=["gui", "dialogs"],
     fap_category="Misc",
     apptype=FlipperAppType.EXTERNAL,
 )
