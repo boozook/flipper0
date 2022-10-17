@@ -54,5 +54,6 @@ pub mod ffi {
 
 
 pub mod r#panic;
+pub mod process;
 pub mod error;
 pub mod result;
