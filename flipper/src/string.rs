@@ -1,6 +1,8 @@
 use core::ptr::NonNull;
 use core::ffi::CStr;
 use core::ffi::c_char;
+use core::hash::Hash;
+use core::cmp::Ordering;
 use core::borrow::Borrow;
 use sys::ffi;
 use sys::alloc::ffi::CString;
@@ -109,4 +111,46 @@ impl core::fmt::Debug for OsString {
 impl Borrow<CStr> for OsString {
 	#[inline]
 	fn borrow(&self) -> &CStr { self.as_c_str() }
+}
+
+impl Hash for OsString {
+	fn hash<H: core::hash::Hasher>(&self, state: &mut H) { self.as_c_str().hash(state); }
+}
+
+impl PartialEq<OsString> for OsString {
+	fn eq(&self, other: &Self) -> bool { unsafe { ffi::furi_string_equal(self.as_ptr(), other.as_ptr()) } }
+}
+
+impl PartialEq<CString> for OsString {
+	fn eq(&self, other: &CString) -> bool { self.eq(other.as_c_str()) }
+}
+
+impl PartialEq<CStr> for OsString {
+	fn eq(&self, other: &CStr) -> bool { unsafe { ffi::furi_string_equal_str(self.as_ptr(), other.as_ptr() as _) } }
+}
+
+impl PartialOrd<OsString> for OsString {
+	fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+		match unsafe { ffi::furi_string_cmp(self.as_ptr(), other.as_ptr()) } {
+			0 => Some(Ordering::Equal),
+			1 => Some(Ordering::Greater),
+			-1 => Some(Ordering::Less),
+			_ => None,
+		}
+	}
+}
+
+impl PartialOrd<CString> for OsString {
+	fn partial_cmp(&self, other: &CString) -> Option<Ordering> { self.partial_cmp(other.as_c_str()) }
+}
+
+impl PartialOrd<CStr> for OsString {
+	fn partial_cmp(&self, other: &CStr) -> Option<Ordering> {
+		match unsafe { ffi::furi_string_cmp_str(self.as_ptr(), other.as_ptr() as _) } {
+			0 => Some(Ordering::Equal),
+			1 => Some(Ordering::Greater),
+			-1 => Some(Ordering::Less),
+			_ => None,
+		}
+	}
 }
