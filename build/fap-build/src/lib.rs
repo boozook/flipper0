@@ -72,7 +72,7 @@ pub fn link_package_dir<S: AsRef<str>>(id: S, force: bool) -> Result {
 	let package: PathBuf = env::var("OUT_DIR")?.into();
 	let target = get_flipper_sdk_path()?.join("applications_user").join(id.as_ref());
 
-	if fs::try_exists(&target)? {
+	if fs::try_exists(&target)? || target.is_symlink() {
 		let link = fs::read_link(&target).map_err(|err| {
 			                                 println!("cargo:warning=Error: {err}");
 			                                 println!(
