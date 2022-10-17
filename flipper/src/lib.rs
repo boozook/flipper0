@@ -18,7 +18,18 @@ pub use sys::main;
 
 pub mod macros;
 pub mod io;
+pub mod fs;
+pub mod path;
 pub mod string;
+
+
+pub mod ffi {
+	pub use sys::ffi::*;
+	pub use sys::alloc::ffi::CString;
+	pub use core::ffi::CStr;
+}
+
+
 #[const_trait]
 trait AsPtr<T> {
 	fn as_ptr(&self) -> *mut T;

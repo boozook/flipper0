@@ -264,7 +264,7 @@ dependencies = [
 
 [[package]]
 name = "flipper0"
-version = "0.2.4"
+version = "0.3.0"
 dependencies = [
  "flipper0-sys",
 ]
