@@ -1,0 +1,47 @@
+[package]
+name = "fs-example"
+version = "0.1.0"
+edition = "2021"
+authors = ["Alex Koz <a@koz.email>"]
+description = "Example App for Flipper Zero"
+homepage = "https://github.com/boozook/flipper0/tree/master/examples/fs"
+publish = false
+
+build = "../app-build/build.rs"
+
+
+[package.metadata.fap]
+name = "Storage Example"
+requires = ["storage"]
+
+
+[lib]
+path = "app.rs"
+crate-type = ["staticlib"]
+bench = false
+test = false
+
+
+[features]
+default = ["prebuild"]
+# build methods:
+prebuild = ["flipper0/prebuild"]             # use pregenerated bindings
+use-local-sdk = ["flipper0/use-local-sdk"]   # try to build from source
+use-remote-sdk = ["flipper0/use-remote-sdk"] # build from remote git repo (slow)
+
+
+[dependencies.flipper0]
+version = "*"
+path = "../../flipper"
+
+[build-dependencies.fap]
+package = "flipper0-fap-build"
+version = "*"
+path = "../../build/fap-build"
+
+# Just to get name of env-var `FLIPPER_SDK_PATH_ENV` for assertion.
+# Usually unnecessary. Just for example.
+[build-dependencies.cfg]
+package = "flipper0-build-cfg"
+version = "0.1"
+path = "../../build/common/cfg"
