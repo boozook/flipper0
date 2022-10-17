@@ -286,7 +286,7 @@ dependencies = [
 
 [[package]]
 name = "flipper0-fap-build"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "crate-metadata",
  "flipper0-build-cfg",

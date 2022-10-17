@@ -154,3 +154,25 @@ impl PartialOrd<CStr> for OsString {
 		}
 	}
 }
+
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+	use std::ffi::CString;
+
+	#[test]
+	#[cfg(target = "thumbv7em-none-eabihf")]
+	unsafe fn cmp_os_string() {
+		let a = OsString::try_from(CStr::from_ptr(b"a\0".as_ptr() as _)).unwrap();
+		let b = OsString::try_from(CStr::from_ptr(b"b\0".as_ptr() as _)).unwrap();
+		let result = a.partial_cmp(&b);
+
+		use alloc::string::String;
+		let a = String::from("a");
+		let b = String::from("b");
+		let expected = a.partial_cmp(&b);
+
+		assert_eq!(result, expected);
+	}
+}
