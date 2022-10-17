@@ -1,5 +1,6 @@
-[build]
-target = "thumbv7em-none-eabihf"
+## default target:
+# [build]
+# target = "thumbv7em-none-eabihf"
 
 [target.aarch64-apple-darwin]
 rustflags = ["-C", "target-cpu=native"]

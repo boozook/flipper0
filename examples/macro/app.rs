@@ -9,13 +9,13 @@ extern crate flipper0_sys;
 
 use core::ptr::*;
 use core::ffi::*;
-use alloc::boxed::Box;
-use flipper0_sys::ffi::*;
 use core::time::Duration;
+use flipper0_sys::alloc;
+use flipper0_sys::ffi::*;
+use alloc::boxed::Box;
 
-extern crate alloc;
 
-type Result = core::result::Result<(), Box<dyn core::error::Error>>;
+type Result<T = (), E = Box<dyn core::error::Error>> = core::result::Result<T, E>;
 
 
 #[main]

@@ -110,7 +110,8 @@ pub fn try_build() -> Result<(), Box<dyn Error>> {
 		                                             .allowlist_recursively(true)
 		                                             .detect_include_paths(true)
 		                                             .trust_clang_mangling(true)
-		                                             .derive_debug(debug)
+		                                             .derive_debug(debug || crate::feature("derive-debug"))
+																	// .impl_debug(debug || crate::feature("derive-debug"))
 		                                             .derive_default(crate::feature("derive-default"))
 		                                             .derive_copy(crate::feature("derive-copy"))
 		                                             .derive_hash(crate::feature("derive-hash"))
@@ -303,8 +304,8 @@ pub fn exclustions<I: IntoIterator<Item = P>, P: AsRef<Path>>(paths: I) -> Resul
 }
 
 
-// allowing dead-code to ommit unnecessary `Debug` impl for `DeriveCallbacks`
-// that needed to `ParseCallbacks`
+// Allowing dead-code to omit unnecessary `Debug` impl for `DeriveCallbacks`.
+// That's requirement by `ParseCallbacks`.
 #[allow(dead_code)]
 #[derive(Debug)]
 struct DeriveCallbacks<P: AsRef<Path>> {
@@ -316,6 +317,17 @@ impl bindgen::callbacks::ParseCallbacks for DeriveCallbacks<PathBuf> {
 		let path = PathBuf::from(filename);
 		if !self.exclude.contains(&path) {
 			bindgen::CargoCallbacks.include_file(filename)
+		}
+	}
+
+	/// Explicitly add derives because for example `bindgen::Builder::derive_debug(true)` not always works 🤷‍♂️.
+	fn add_derives(&self, name: &str) -> Vec<String> {
+		if ["FS_Error"].contains(&name) && !crate::is_debug() {
+			vec!["Debug".to_owned()]
+		} else if ["FileInfo"].contains(&name) {
+			vec!["Clone".to_owned()]
+		} else {
+			vec![]
 		}
 	}
 }
@@ -347,7 +359,7 @@ fn from_source<P: AsRef<Path>, Builder: FnOnce() -> bindgen::Builder>(
 		                 .clang_arg(format!("-DSTM32WB55xx"))
 		                 .clang_arg(format!("-DUSE_FULL_LL_DRIVER"))
 		                 .clang_args(&["-x", "c"])
-		                 .clang_arg("-ferror-limit=100000");
+		                 .clang_arg("-ferror-limit=1000");
 
 		if let Some(include) = extra_include {
 			builder = builder.clang_arg(format!("-I{}", &include.as_ref().display()))
