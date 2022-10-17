@@ -74,29 +74,5 @@ _`prebuild` is default feature just for ability to build crate out-of-the-box._
 
 
 
-- - -
-
-## TODO:
-- [ ] logger & logging feature
-- [ ] wrapper for stdout
-- [ ] wrapper for threading
-- [ ] wrapper for fs
-- [x] impl panic handler
-- [x] impl global alocator
-- build methods:
-  - [x] gen from web: install SDK, then build from source
-  - [x] gen from source
-  - [ ] gen from product of `fbt sdk_tree`
-  - [ ] get from web by api_symbols.csv with opaque types, without requirement of SDK.
-- [ ] tool for apps to build & link elf (with or without fbt)
-- [x] __examples__
-- [ ] proper documentation
-- [ ] split api to modules under feature-gates, like "furi" or "gpio".
-- [ ] __tests__
-- [ ] CI/CD
-
-
-
-
 [bingen+clang]: https://github.com/rust-lang/rust-bindgen/issues/918
 [Flipper Zero Fw]: https://github.com/flipperdevices/flipperzero-firmware/
