@@ -98,7 +98,7 @@ impl core::fmt::Display for Error {
 
 impl const From<FS_Error> for Error {
 	fn from(value: FS_Error) -> Self {
-		assert!(value as i32 != FS_Error::FSE_OK as i32);
+		assert!(!matches!(value, FS_Error::FSE_OK));
 		unsafe { core::mem::transmute(value) }
 	}
 }

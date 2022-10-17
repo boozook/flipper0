@@ -2,7 +2,7 @@
 
 ## Crate contains
 
-- Reexports low-level bindings
+- Re-exports low-level bindings
 - Re-shares `#[main]` macro
 - File System rusty API
 - Some things such as stdout, print(ln), OsString, etc..

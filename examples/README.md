@@ -1,6 +1,6 @@
 # Examples
 
-Examples in order from low level with handy ctrl for all to high level with less ctrl but with some neat "single-button" solutions.
+Examples in order from lower layer (that gives & requires handy ctrl for all things) to high layer with less ctrl but with some neat "single-button" solutions.
 
 After build all examples you usually need to build an applications package ("fap") with official build tool `fbt`,
 so need to clone [flipper-firmware repo][] to somewhere and save its path to the ENV VAR `FLIPPER_FW_SRC_PATH`.
@@ -196,6 +196,16 @@ cargo +nightly build -p=fs-example --target=thumbv7em-none-eabihf
 
 Build process is same as examples above.
 
+Then after build, connect your dolphin to USB and run this:
+
+```bash
+pushd "${FLIPPER_FW_SRC_PATH}"
+# upload app to the device
+./scripts/storage.py send build/f7-firmware-C/.extapps/fs-example.fap /ext/apps/Misc/fs-example.fap
+# connect CLI
+python3 ./scripts/serial_cli.py
+# then type "log" ⏎ and run app on device.
+```
 
 
 
