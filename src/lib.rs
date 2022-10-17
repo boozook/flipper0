@@ -62,3 +62,4 @@ pub mod r#panic;
 pub mod process;
 pub mod error;
 pub mod result;
+pub mod os;

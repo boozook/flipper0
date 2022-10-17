@@ -13,7 +13,7 @@ default-members = ["flipper", "."]
 [package]
 name = "flipper0-sys"
 description = "Bindings for Flipper Zero fw"
-version = "0.2.5"
+version = "0.2.6"
 edition = "2021"
 
 authors = ["Alex Koz <a@koz.email>"]
