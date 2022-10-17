@@ -16,11 +16,13 @@ type Result<T = (), E = self::Error> = std::result::Result<T, E>;
 /// Build Flipper Application Package (FAP).
 ///
 /// 1. Build FAP manifest (fam),
-/// 1. read env var `FLIPPER_REPO_PATH`,
-/// 1. copy/link (now just link) the manifest (fam) and assets to `$FLIPPER_REPO_PATH/applications_user/{fap-id}/`,
+/// 1. read env var [`FLIPPER_SDK_PATH_ENV`][],
+/// 1. copy/link (now just link) the manifest (fam) and assets to `$FLIPPER_FW_SRC_PATH/applications_user/{fap-id}/`,
 /// 1. then execute `fbt firmware_{fap-id}` (TODO: impl post-build somehow).
 ///
-/// `force` means that we can overwrite anything in the `$FLIPPER_REPO_PATH/applications_user/{fap-id}`.
+/// `force` means that we can overwrite anything in the `$FLIPPER_FW_SRC_PATH/applications_user/{fap-id}`.
+///
+/// [`FLIPPER_SDK_PATH_ENV`]: https://docs.rs/flipper0-build-cfg/latest/flipper0_build_cfg/consts/env/constant.FLIPPER_SDK_PATH_ENV.html
 pub fn build(force: bool) -> Result {
 	let fam = fam::manifest()?;
 	let id = fam.id().ok_or(IoError::new(IoErrorKind::NotFound, "manifest.appid"))?;
@@ -56,16 +58,16 @@ fn get_flipper_sdk_path() -> Result<PathBuf> {
 }
 
 
-/// Creates symlink `$FLIPPER_REPO_PATH/applications_user/{fap-id}` -> `$OUT_DIR` directory.
+/// Creates symlink `$FLIPPER_FW_SRC_PATH/applications_user/{fap-id}` -> `$OUT_DIR` directory.
 ///
 /// __Attention:__ it affects fs outside of `$OUT_DIR` directory.
 ///
 /// _Safety:_
 /// - it fails if:
-/// 	- `$FLIPPER_REPO_PATH` points to non-existing directory
-/// 	- `$FLIPPER_REPO_PATH/applications_user` does not exists
-/// 	- `$FLIPPER_REPO_PATH/applications_user/{fap-id}` existing but is not a symlink
-/// 	- `$FLIPPER_REPO_PATH/applications_user/{fap-id}` existing symlink but `force` arg is `false`
+/// 	- `$FLIPPER_FW_SRC_PATH` points to non-existing directory
+/// 	- `$FLIPPER_FW_SRC_PATH/applications_user` does not exists
+/// 	- `$FLIPPER_FW_SRC_PATH/applications_user/{fap-id}` existing but is not a symlink
+/// 	- `$FLIPPER_FW_SRC_PATH/applications_user/{fap-id}` existing symlink but `force` arg is `false`
 /// - it can just create symlink
 /// - it can override existing symlink only with `force` arg is `true`
 pub fn link_package_dir<S: AsRef<str>>(id: S, force: bool) -> Result {

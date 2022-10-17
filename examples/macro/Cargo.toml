@@ -42,5 +42,5 @@ path = "../../build/fap-build"
 # Usually unnecessary. Just for example.
 [build-dependencies.cfg]
 package = "flipper0-build-cfg"
-version = "0.1"
+version = "*"
 path = "../../build/common/cfg"

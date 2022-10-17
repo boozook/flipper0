@@ -34,9 +34,9 @@ version = "0.1"
 default-features = false # disable prebuild
 ```
 
-To build just add `FLIPPER_REPO_PATH` to your ENV anyhow (config, build-script, shell-rc, etc..), for example run:
+To build just add `FLIPPER_FW_SRC_PATH` to your ENV anyhow (config, build-script, shell-rc, etc..), for example run:
 ```
-FLIPPER_REPO_PATH=~/path/to/flipperzero-firmware/ cargo build
+FLIPPER_FW_SRC_PATH=~/path/to/flipperzero-firmware/ cargo build
 ```
 Or without SDK, that will be downloaded from the official repository:
 ```
@@ -49,7 +49,7 @@ FLIPPER_REPO_BRANCH=release cargo build
 ### Environment variables:
 | Feature                   | Required | Description                                                                                                                                               | Use with feature                  |
 | ------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
-| `FLIPPER_REPO_PATH`       | required | Needed to build from source in local working copy of [firmware repo][Flipper Zero Fw], points to root of the repo.                                        | `use-local-sdk`                   |
+| `FLIPPER_FW_SRC_PATH`       | required | Needed to build from source in local working copy of [firmware repo][Flipper Zero Fw], points to root of the repo.                                        | `use-local-sdk`                   |
 | `ARM_TOOLCHAIN`           | optional | If omitted build-script will search it in the working copy of the [firmware repo][Flipper Zero Fw]. Typically should points to "arm-none-eabi" directory. | `use-local-sdk`, `use-remote-sdk` |
 | `FLIPPER_REPO_REV`        | optional | Revision or tag.                                                                                                                                          | `use-remote-sdk`                  |
 | `FLIPPER_REPO_BRANCH`     | optional | Name of branch.                                                                                                                                           | `use-remote-sdk`                  |
@@ -67,7 +67,7 @@ Build methods features:
 | Feature          | Deafault | Description                                                            | Used ENV vars                                                                                             |
 | ---------------- | -------- | ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | `prebuild`       | +        | use pre-generated bindings                                             |                                                                                                           |
-| `use-local-sdk`  | +        | look at `FLIPPER_REPO_PATH`, build from source                         | `FLIPPER_REPO_PATH` (required), `ARM_TOOLCHAIN` (optional)                                                |
+| `use-local-sdk`  | +        | look at `FLIPPER_FW_SRC_PATH`, build from source                         | `FLIPPER_FW_SRC_PATH` (required), `ARM_TOOLCHAIN` (optional)                                                |
 | `use-remote-sdk` | -        | clone remote git repo, initial setup with fbt, then build from source. | `FLIPPER_REPO_REV`, `FLIPPER_REPO_BRANCH`, `FLIPPER_REPO_CLONE_PATH`, `ARM_TOOLCHAIN` (all vars optional) |
 
 _`prebuild` is default feature just for ability to build crate out-of-the-box._

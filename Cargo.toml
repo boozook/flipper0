@@ -13,7 +13,7 @@ default-members = ["flipper", "."]
 [package]
 name = "flipper0-sys"
 description = "Bindings for Flipper Zero fw"
-version = "0.2.6"
+version = "0.2.7"
 edition = "2021"
 
 authors = ["Alex Koz <a@koz.email>"]
@@ -69,7 +69,7 @@ oom-global = []                  # global out-of-memory handler
 panic = []                       # global panic handler
 # build methods:
 prebuild = []       # use pregenerated bindings
-use-local-sdk = []  # look at `FLIPPER_REPO_PATH`, try to build from source
+use-local-sdk = []  # look at `FLIPPER_FW_SRC_PATH`, try to build from source
 use-remote-sdk = [] # build from remote git repo (slow)
 # build options:
 derive-default = []
@@ -99,7 +99,7 @@ csv = "1.1"
 
 [build-dependencies.build-cfg]
 package = "flipper0-build-cfg"
-version = "0.1"
+version = "0.1.1"
 path = "build/common/cfg"
 
 [build-dependencies.bindgen]

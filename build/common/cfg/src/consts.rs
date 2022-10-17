@@ -9,7 +9,7 @@ pub mod env {
 
 	// local
 	/// Env var name, value should contain path to the root of the Flipper Zero firmware repository.
-	pub const FLIPPER_SDK_PATH_ENV: &'static str = "FLIPPER_REPO_PATH";
+	pub const FLIPPER_SDK_PATH_ENV: &'static str = "FLIPPER_FW_SRC_PATH";
 	/// Env var name. Optional. Should points to ARM toolchain, `arm-none-eabi` directory.
 	pub const ARM_TOOLCHAIN_PATH_ENV: &'static str = "ARM_TOOLCHAIN";
 
