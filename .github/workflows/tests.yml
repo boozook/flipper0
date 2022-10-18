@@ -1,0 +1,332 @@
+name: Tests
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+      - ci # for test only
+
+env:
+  RUSTUP_MAX_RETRIES: 10
+  CARGO_INCREMENTAL: 1
+  CARGO_NET_RETRY: 10
+  CARGO_TERM_COLOR: always
+
+  FLIPPER_FW_SRC_PATH: ~/fz_fw
+  FLIPPER_REPO_CLONE_PATH: ~/fz_fw
+
+jobs:
+  build-support-crates:
+    name: Build Support ${{ matrix.crate }} (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+
+    defaults:
+      run:
+        shell: bash
+
+    strategy:
+      fail-fast: true
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+        crate:
+          - fam
+          - flipper0-build-cfg
+          - flipper0-fam-build
+          - flipper0-fap-build
+          - flipper0-macro
+        profile:
+          - --release
+          - ""
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Cache Cargo
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build
+        run: cargo +nightly build -p=${{ matrix.crate }} ${{ matrix.profile }}
+
+  build-bindings-prebuilt:
+    name: Build Bindings ${{ matrix.crate }} [${{ matrix.branch }}] (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+
+    defaults:
+      run:
+        shell: bash
+
+    strategy:
+      fail-fast: true
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+        crate:
+          - flipper0-sys
+          - flipper0
+        profile:
+          - "" # debug
+          - --release
+        target:
+          - "" # host os
+          - --target=thumbv7em-none-eabihf
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Cache Cargo
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build
+        run: cargo +nightly build -p=${{ matrix.crate }} ${{ matrix.profile }} ${{ matrix.target }}
+
+  build-bindings-source:
+    name: Build Bindings with local SDK ${{ matrix.crate }} (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+
+    defaults:
+      run:
+        shell: bash
+
+    strategy:
+      fail-fast: true
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+        crate:
+          - flipper0-sys
+          - flipper0
+        profile:
+          - "" # debug
+          - --release
+        target:
+          - "" # host os
+          - --target=thumbv7em-none-eabihf
+        branch:
+          - dev
+          - release-candidate
+          - release
+        features:
+          - --no-default-features --features="use-local-sdk"
+          - --no-default-features --features="use-local-sdk, panic, macro, allocator-global, oom-global"
+          - --no-default-features --features="use-local-sdk, panic, macro, allocator-global, oom-global, derive-default, derive-eq, derive-copy, derive-hash, derive-ord, derive-partialeq, derive-partialord, derive-debug"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Cache Cargo
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache SDK
+        uses: actions/cache@v3
+        id: cache-sdk
+        with:
+          path: ${{ env.FLIPPER_FW_SRC_PATH }}
+          key: f0-fw-${{ matrix.branch }}-${{ runner.os }}
+
+      - name: Checkout SDK
+        if: steps.cache-sdk.outputs.cache-hit != 'true'
+        uses: actions/checkout@v2
+        with:
+          repository: flipperdevices/flipperzero-firmware
+          ref: ${{ matrix.branch }}
+          submodules: true
+          path: ${{ env.FLIPPER_FW_SRC_PATH }}
+
+      # linux:
+      # apt update
+      # apt install openocd clang-format-13 dfu-util protobuf-compiler
+
+      - name: Setup SDK
+        if: steps.cache-sdk.outputs.cache-hit != 'true'
+        run: |
+          cd $FLIPPER_FW_SRC_PATH
+          pip3 install -r scripts/requirements.txt
+          ./fbt
+
+      - name: Build
+        run: cargo +nightly build -p=${{ matrix.crate }} ${{ matrix.profile }} ${{ matrix.target }} ${{ matrix.features }}
+
+  build-examples:
+    name: Build Example ${{ matrix.crate }} (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+
+    defaults:
+      run:
+        shell: bash
+
+    strategy:
+      fail-fast: true
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+        crate:
+          - { name: hello-fap, arg: --example }
+          - { name: fap-manifest-metadata-example, arg: -p }
+          - { name: fap-manifest-toml-example, arg: -p }
+          - { name: fap-build-example, arg: -p }
+          - { name: main-macro-example, arg: -p }
+          - { name: fs-example, arg: -p }
+        profile:
+          - --release
+          - ""
+        branch:
+          - dev
+          - release-candidate
+          - release
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Cache Cargo
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache SDK
+        uses: actions/cache@v3
+        id: cache-sdk
+        with:
+          path: ${{ env.FLIPPER_FW_SRC_PATH }}
+          key: f0-fw-${{ matrix.branch }}-${{ runner.os }}
+
+      - name: Checkout SDK
+        if: steps.cache-sdk.outputs.cache-hit != 'true'
+        uses: actions/checkout@v2
+        with:
+          repository: flipperdevices/flipperzero-firmware
+          ref: ${{ matrix.branch }}
+          submodules: true
+          path: ${{ env.FLIPPER_FW_SRC_PATH }}
+
+      # linux:
+      # apt update
+      # apt install openocd clang-format-13 dfu-util protobuf-compiler
+
+      - name: Setup SDK
+        if: steps.cache-sdk.outputs.cache-hit != 'true'
+        run: |
+          cd $FLIPPER_FW_SRC_PATH
+          pip3 install -r scripts/requirements.txt
+          ./fbt
+
+      - name: Build
+        run: cargo +nightly build ${{ matrix.crate.arg }} ${{ matrix.crate.name }} ${{ matrix.profile }} --target=thumbv7em-none-eabihf
+
+      - name: FBT
+        run: |
+          cd $FLIPPER_FW_SRC_PATH
+          ./fbt fap_${{ matrix.crate.name }}
+          # COMPACT=1 DEBUG=1
+
+  # test:
+  #   name: Tests
+  #   runs-on: ${{ matrix.os }}
+  #   defaults:
+  #     run:
+  #       shell: bash
+
+  #   env:
+  #     FLIPPER_REPO_BRANCH: ${{ matrix.branch }}
+
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       os:
+  #         - macos-latest
+  #         - ubuntu-latest
+  #       branch:
+  #         - release
+  #         - release-candidate
+  #         - dev
+
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v2
+
+  #     # ...
+
+  #     - name: Tests
+  #       run: cargo test --all --no-fail-fast -- --nocapture --test-threads=1
+  #     # cargo test -p=flipper0-fap-macro
+
+  style:
+    name: Style
+    runs-on: ${{ matrix.os }}
+    if: "!contains(github.event.head_commit.message, 'ci skip') && !contains(github.event.head_commit.message, 'skip ci')"
+
+    defaults:
+      run:
+        shell: bash
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Cache Cargo
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Fmt
+        run: cargo fmt --all -- --check
+
+      - name: Clippy
+        uses: actions-rs/clippy-check@v1
+        with:
+          name: Clippy report
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --all
