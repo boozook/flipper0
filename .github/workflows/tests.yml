@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - ci # for test only
 
 env:
   RUSTUP_MAX_RETRIES: 10
@@ -12,13 +11,17 @@ env:
   CARGO_NET_RETRY: 10
   CARGO_TERM_COLOR: always
 
-  FLIPPER_FW_SRC_PATH: ~/fz_fw
-  FLIPPER_REPO_CLONE_PATH: ~/fz_fw
+  # for actions/cache@v3:
+  SEGMENT_DOWNLOAD_TIMEOUT_MINS: 6
+
+  FLIPPER_FW_SRC_PATH: ${{ github.workspace }}/fz_fw/
+  FLIPPER_REPO_CLONE_PATH: ${{ github.workspace }}/fz_fw/
 
 jobs:
-  build-support-crates:
-    name: Build Support ${{ matrix.crate }} (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+  test-support-crates:
+    needs: style
+    name: Test ${{ matrix.crate }} (${{ matrix.os.short }})
+    runs-on: ${{ matrix.os.full }}
 
     defaults:
       run:
@@ -28,22 +31,22 @@ jobs:
       fail-fast: true
       matrix:
         os:
-          - macos-latest
-          - ubuntu-latest
-          - windows-latest
+          - { full: macos-latest, short: macos }
+          - { full: ubuntu-latest, short: linux }
+          - { full: windows-latest, short: win }
         crate:
           - fam
           - flipper0-build-cfg
           - flipper0-fam-build
           - flipper0-fap-build
           - flipper0-macro
-        profile:
-          - --release
-          - ""
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+
+      - name: Rust toolchain
+        run: rustup update; rustup install nightly
 
       - name: Cache Cargo
         uses: actions/cache@v3
@@ -54,14 +57,19 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('rust-toolchain.toml') }}
+          restore-keys: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}-${{ hashFiles('rust-toolchain.toml') }}
 
-      - name: Build
-        run: cargo +nightly build -p=${{ matrix.crate }} ${{ matrix.profile }}
+      - name: Check
+        run: cargo +nightly check -p=${{ matrix.crate }}
+
+      - name: Test
+        run: cargo +nightly test -p=${{ matrix.crate }} --no-fail-fast
 
   build-bindings-prebuilt:
-    name: Build Bindings ${{ matrix.crate }} [${{ matrix.branch }}] (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+    needs: test-support-crates
+    name: Build ${{ matrix.crate }} ${{ matrix.profile && 'R' || 'D' }} [prebuilt] (${{ matrix.os.short }})
+    runs-on: ${{ matrix.os.full }}
 
     defaults:
       run:
@@ -71,9 +79,9 @@ jobs:
       fail-fast: true
       matrix:
         os:
-          - macos-latest
-          - ubuntu-latest
-          - windows-latest
+          - { full: macos-latest, short: macos }
+          - { full: ubuntu-latest, short: linux }
+          - { full: windows-latest, short: win }
         crate:
           - flipper0-sys
           - flipper0
@@ -81,12 +89,11 @@ jobs:
           - "" # debug
           - --release
         target:
-          - "" # host os
           - --target=thumbv7em-none-eabihf
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Cache Cargo
         uses: actions/cache@v3
@@ -97,14 +104,23 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('rust-toolchain.toml') }}
+          restore-keys: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}-${{ hashFiles('rust-toolchain.toml') }}
+
+      - name: Rust toolchain
+        run: rustup update; rustup install nightly; rustup target add thumbv7em-none-eabihf
 
       - name: Build
         run: cargo +nightly build -p=${{ matrix.crate }} ${{ matrix.profile }} ${{ matrix.target }}
 
   build-bindings-source:
-    name: Build Bindings with local SDK ${{ matrix.crate }} (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+    needs:
+      - build-bindings-prebuilt
+      - test-support-crates
+      - random
+    if: needs.random.outputs.value == 1
+    name: Build bindings ${{ matrix.profile && 'R' || 'D' }} [${{ matrix.rev }}] (${{ matrix.os.short }})
+    runs-on: ${{ matrix.os.full }}
 
     defaults:
       run:
@@ -114,22 +130,17 @@ jobs:
       fail-fast: true
       matrix:
         os:
-          - macos-latest
-          - ubuntu-latest
-          - windows-latest
-        crate:
-          - flipper0-sys
-          - flipper0
+          - { full: macos-latest, short: macos }
+          - { full: ubuntu-latest, short: linux }
+          - { full: windows-latest, short: win }
         profile:
           - "" # debug
           - --release
         target:
-          - "" # host os
-          - --target=thumbv7em-none-eabihf
-        branch:
-          - dev
+          - thumbv7em-none-eabihf
+        rev:
+          - 0.69.0 # minimal supported version
           - release-candidate
-          - release
         features:
           - --no-default-features --features="use-local-sdk"
           - --no-default-features --features="use-local-sdk, panic, macro, allocator-global, oom-global"
@@ -137,7 +148,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Cache Cargo
         uses: actions/cache@v3
@@ -148,41 +159,61 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('rust-toolchain.toml') }}
+          restore-keys: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}-${{ hashFiles('rust-toolchain.toml') }}
+
+      - name: Rust toolchain
+        run: rustup update; rustup install nightly; rustup target add ${{ matrix.target }}
 
       - name: Cache SDK
         uses: actions/cache@v3
         id: cache-sdk
         with:
           path: ${{ env.FLIPPER_FW_SRC_PATH }}
-          key: f0-fw-${{ matrix.branch }}-${{ runner.os }}
+          key: f0-fw-${{ matrix.rev }}-${{ runner.os }}
+
+      - name: fix permissions
+        if: steps.cache-sdk.outputs.cache-hit == 'true' && runner.os != 'Windows'
+        run: chmod -R a+x ${{ env.FLIPPER_FW_SRC_PATH }}
 
       - name: Checkout SDK
-        if: steps.cache-sdk.outputs.cache-hit != 'true'
-        uses: actions/checkout@v2
+        if: (steps.cache-sdk.outputs.cache-hit != 'true') || contains('release-candidate, dev', matrix.rev)
+        uses: actions/checkout@v3
         with:
           repository: flipperdevices/flipperzero-firmware
-          ref: ${{ matrix.branch }}
-          submodules: true
           path: ${{ env.FLIPPER_FW_SRC_PATH }}
+          ref: ${{ matrix.rev }}
+          submodules: true
+          clean: false
 
-      # linux:
-      # apt update
-      # apt install openocd clang-format-13 dfu-util protobuf-compiler
+      - name: script .ext
+        if: runner.os == 'Windows'
+        run: echo "FBT_SHELL_EXT=.cmd" >> $GITHUB_ENV
 
       - name: Setup SDK
-        if: steps.cache-sdk.outputs.cache-hit != 'true'
+        if: (steps.cache-sdk.outputs.cache-hit != 'true') || contains('release-candidate, dev', matrix.rev)
         run: |
           cd $FLIPPER_FW_SRC_PATH
-          pip3 install -r scripts/requirements.txt
-          ./fbt
+          if [ ! -d toolchain ]; then
+            pip3 install -r scripts/requirements.txt
+            ./fbt${{ env.FBT_SHELL_EXT || '' }}
+          fi
 
-      - name: Build
-        run: cargo +nightly build -p=${{ matrix.crate }} ${{ matrix.profile }} ${{ matrix.target }} ${{ matrix.features }}
+      - name: Build flipper0-sys
+        run: cargo +nightly build -p=flipper0-sys ${{ matrix.profile }} --target=${{ matrix.target }} ${{ matrix.features }}
+
+      - name: Build flipper0
+        # TODO: not supported yet
+        if: ${{ runner.os != 'Windows' }}
+        run: cargo +nightly build -p=flipper0 ${{ matrix.profile }} --target=${{ matrix.target }} ${{ matrix.features }}
 
   build-examples:
-    name: Build Example ${{ matrix.crate }} (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+    needs:
+      - build-bindings-prebuilt
+      - random
+    if: needs.random.outputs.value == 0
+    name: Build E ${{ matrix.crate.name }} ${{ matrix.profile && 'R' || 'D' }} [${{ matrix.rev }}] (${{ matrix.os.short }})
+    runs-on: ${{ matrix.os.full }}
 
     defaults:
       run:
@@ -192,27 +223,27 @@ jobs:
       fail-fast: true
       matrix:
         os:
-          - macos-latest
-          - ubuntu-latest
-          - windows-latest
+          - { full: macos-latest, short: macos }
+          - { full: ubuntu-latest, short: linux }
+          # TODO: not supported yet
+          # - { full: windows-latest, short: win }
         crate:
-          - { name: hello-fap, arg: --example }
-          - { name: fap-manifest-metadata-example, arg: -p }
-          - { name: fap-manifest-toml-example, arg: -p }
-          - { name: fap-build-example, arg: -p }
-          - { name: main-macro-example, arg: -p }
-          - { name: fs-example, arg: -p }
+          - { name: hello-fap, arg: --example, fap: false }
+          - { name: fap-manifest-metadata-example, arg: -p, fap: false }
+          - { name: fap-manifest-toml-example, arg: -p, fap: false }
+          - { name: fap-build-example, arg: -p, fap: true }
+          - { name: main-macro-example, arg: -p, fap: true }
+          - { name: fs-example, arg: -p, fap: true }
         profile:
           - --release
           - ""
-        branch:
-          - dev
+        rev:
+          - 0.69.0 # minimal supported version
           - release-candidate
-          - release
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Cache Cargo
         uses: actions/cache@v3
@@ -223,79 +254,60 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('rust-toolchain.toml') }}
+          restore-keys: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}-${{ hashFiles('rust-toolchain.toml') }}
+
+      - name: Rust toolchain
+        run: rustup update; rustup install nightly; rustup target add thumbv7em-none-eabihf
 
       - name: Cache SDK
+        if: matrix.crate.fap
         uses: actions/cache@v3
         id: cache-sdk
         with:
           path: ${{ env.FLIPPER_FW_SRC_PATH }}
-          key: f0-fw-${{ matrix.branch }}-${{ runner.os }}
+          key: f0-fw-${{ matrix.rev }}-${{ runner.os }}
+
+      - name: fix permissions
+        if: matrix.crate.fap && steps.cache-sdk.outputs.cache-hit == 'true' && runner.os != 'Windows'
+        run: chmod -R a+x ${{ env.FLIPPER_FW_SRC_PATH }}
 
       - name: Checkout SDK
-        if: steps.cache-sdk.outputs.cache-hit != 'true'
-        uses: actions/checkout@v2
+        if: matrix.crate.fap && ((steps.cache-sdk.outputs.cache-hit != 'true') || contains('release-candidate, dev', matrix.rev))
+        uses: actions/checkout@v3
         with:
           repository: flipperdevices/flipperzero-firmware
-          ref: ${{ matrix.branch }}
-          submodules: true
           path: ${{ env.FLIPPER_FW_SRC_PATH }}
+          ref: ${{ matrix.rev }}
+          submodules: true
+          clean: false
 
-      # linux:
-      # apt update
-      # apt install openocd clang-format-13 dfu-util protobuf-compiler
+      - name: script .ext
+        if: matrix.crate.fap && (runner.os == 'Windows')
+        run: echo "FBT_SHELL_EXT=.cmd" >> $GITHUB_ENV
 
       - name: Setup SDK
-        if: steps.cache-sdk.outputs.cache-hit != 'true'
+        if: matrix.crate.fap && ((steps.cache-sdk.outputs.cache-hit != 'true') || contains('release-candidate, dev', matrix.rev))
         run: |
           cd $FLIPPER_FW_SRC_PATH
-          pip3 install -r scripts/requirements.txt
-          ./fbt
+          if [ ! -d toolchain ]; then
+            pip3 install -r scripts/requirements.txt
+            ./fbt${{ env.FBT_SHELL_EXT || '' }}
+          fi
 
       - name: Build
         run: cargo +nightly build ${{ matrix.crate.arg }} ${{ matrix.crate.name }} ${{ matrix.profile }} --target=thumbv7em-none-eabihf
 
       - name: FBT
+        if: matrix.crate.fap
         run: |
           cd $FLIPPER_FW_SRC_PATH
-          ./fbt fap_${{ matrix.crate.name }}
+          ./fbt${{ env.FBT_SHELL_EXT || '' }} fap_${{ matrix.crate.name }}
           # COMPACT=1 DEBUG=1
-
-  # test:
-  #   name: Tests
-  #   runs-on: ${{ matrix.os }}
-  #   defaults:
-  #     run:
-  #       shell: bash
-
-  #   env:
-  #     FLIPPER_REPO_BRANCH: ${{ matrix.branch }}
-
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       os:
-  #         - macos-latest
-  #         - ubuntu-latest
-  #       branch:
-  #         - release
-  #         - release-candidate
-  #         - dev
-
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v2
-
-  #     # ...
-
-  #     - name: Tests
-  #       run: cargo test --all --no-fail-fast -- --nocapture --test-threads=1
-  #     # cargo test -p=flipper0-fap-macro
 
   style:
     name: Style
     runs-on: ${{ matrix.os }}
-    if: "!contains(github.event.head_commit.message, 'ci skip') && !contains(github.event.head_commit.message, 'skip ci')"
 
     defaults:
       run:
@@ -308,7 +320,7 @@ jobs:
           - ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Cache Cargo
         uses: actions/cache@v3
@@ -319,14 +331,39 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('rust-toolchain.toml') }}
+          restore-keys: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}-${{ hashFiles('rust-toolchain.toml') }}
 
       - name: Fmt
         run: cargo fmt --all -- --check
 
-      - name: Clippy
-        uses: actions-rs/clippy-check@v1
-        with:
-          name: Clippy report
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: --all
+      # - name: Install Clippy
+      #   run: rustup component add clippy --toolchain=nightly
+
+      # - name: Clippy
+      #   uses: actions-rs/clippy-check@v1.0.7
+      #   with:
+      #     name: Clippy report
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     args: --all
+
+  # Just a little jobs number reducer.
+  random:
+    name: "🎲 (${{ github.event.pull_request.commits || 0 }})"
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Number
+        id: number
+        run: |
+          echo "value=$(expr ${{ github.event.pull_request.commits || 2 }} % 2)" >> $GITHUB_OUTPUT
+
+    outputs:
+      value: ${{ steps.number.outputs.value }}

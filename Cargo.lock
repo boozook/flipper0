@@ -289,14 +289,14 @@ dependencies = [
 
 [[package]]
 name = "flipper0"
-version = "0.3.2"
+version = "0.3.4"
 dependencies = [
  "flipper0-sys",
 ]
 
 [[package]]
 name = "flipper0-build-cfg"
-version = "0.1.1"
+version = "0.1.2"
 
 [[package]]
 name = "flipper0-fam-build"
@@ -311,7 +311,7 @@ dependencies = [
 
 [[package]]
 name = "flipper0-fap-build"
-version = "0.1.6"
+version = "0.1.7"
 dependencies = [
  "crate-metadata",
  "flipper0-build-cfg",
@@ -323,7 +323,7 @@ dependencies = [
 
 [[package]]
 name = "flipper0-macro"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "flipper0-fam-build",
  "proc-macro2",
@@ -335,7 +335,7 @@ dependencies = [
 
 [[package]]
 name = "flipper0-sys"
-version = "0.2.8"
+version = "0.2.10"
 dependencies = [
  "bindgen",
  "csv",

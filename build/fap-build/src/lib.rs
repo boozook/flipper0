@@ -1,12 +1,10 @@
 #![feature(fs_try_exists)]
 
-use std::fs::try_exists;
 use std::{env, fs};
 use std::path::Path;
 use std::path::PathBuf;
 use std::io::{Error as IoError, ErrorKind as IoErrorKind};
-
-use build_cfg::consts::env::FLIPPER_SDK_PATH_ENV;
+use build_cfg::flipper_sdk_path;
 
 
 type Error = Box<dyn std::error::Error>;
@@ -39,25 +37,6 @@ pub fn build(force: bool) -> Result {
 }
 
 
-fn get_flipper_sdk_path() -> Result<PathBuf> {
-	env::var(FLIPPER_SDK_PATH_ENV).map(PathBuf::from)
-	                              .map_err(|err| {
-		                              println!("cargo:warning=`Fail when read {FLIPPER_SDK_PATH_ENV}` env var. Error: {err}");
-		                              err.into()
-	                              })
-	                              .and_then(|path| {
-		                              try_exists(&path).and_then(|exists| {
-			                                               if exists {
-				                                               Ok(path)
-			                                               } else {
-				                                               Err(IoError::new(IoErrorKind::NotFound, path.display().to_string())).into()
-			                                               }
-		                                               })
-		                                               .map_err(Into::into)
-	                              })
-}
-
-
 /// Creates symlink `$FLIPPER_FW_SRC_PATH/applications_user/{fap-id}` -> `$OUT_DIR` directory.
 ///
 /// __Attention:__ it affects fs outside of `$OUT_DIR` directory.
@@ -71,8 +50,10 @@ fn get_flipper_sdk_path() -> Result<PathBuf> {
 /// - it can just create symlink
 /// - it can override existing symlink only with `force` arg is `true`
 pub fn link_package_dir<S: AsRef<str>>(id: S, force: bool) -> Result {
+	println!("linking package '{}' directory with force: {force}", id.as_ref());
+
 	let package: PathBuf = env::var("OUT_DIR")?.into();
-	let target = get_flipper_sdk_path()?.join("applications_user").join(id.as_ref());
+	let target = flipper_sdk_path()?.join("applications_user").join(id.as_ref());
 
 	if fs::try_exists(&target)? || target.is_symlink() {
 		let link = fs::read_link(&target).map_err(|err| {
@@ -111,6 +92,9 @@ pub fn link_package_dir<S: AsRef<str>>(id: S, force: bool) -> Result {
 
 #[rustfmt::skip]
 fn soft_link<P: AsRef<Path>>(original: P, link: P) -> Result {
+	println!("link: {link} -> {target}", link = link.as_ref().display(), target = original.as_ref().display());
+	println!("cargo:rerun-if-changed={}", link.as_ref().display());
+	println!("cargo:rerun-if-changed={}", original.as_ref().display());
 	#[cfg(unix)] use std::os::unix::fs::symlink;
 	#[cfg(windows)] use std::os::windows::fs::symlink_dir as symlink;
 	symlink(original.as_ref(), link.as_ref()).map_err(Into::into)

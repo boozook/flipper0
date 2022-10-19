@@ -8,9 +8,9 @@ pub mod env {
 
 pub mod support {
 	/// Minimal supported SDK version.
-	pub const SDK_VERSION: &str = "~0.68.1";
+	pub const SDK_VERSION: &str = "^0.69.0";
 	/// Tested with API version.
-	pub const API_VERSION: &str = "=1.13";
+	pub const API_VERSION: &str = "^2.2";
 
 	/// Tested with ARM toolchain version.
 	pub const TOOLCHAIN_VERSION: &str = "15";

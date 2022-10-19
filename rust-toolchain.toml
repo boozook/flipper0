@@ -2,3 +2,4 @@
 channel = "nightly"
 targets = ["thumbv7em-none-eabihf"]
 components = ["rustfmt"]
+profile = "default"

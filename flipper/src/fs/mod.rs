@@ -303,7 +303,10 @@ impl Metadata<'_> {
 		self.0.flags & FSF_DIRECTORY != 0
 	}
 
-	pub fn to_owned(&self) -> MetadataOwned { MetadataOwned(self.0.clone()) }
+	pub fn to_owned(&self) -> MetadataOwned
+		where ffi::FileInfo: Clone {
+		MetadataOwned(self.0.clone())
+	}
 }
 
 impl<'a> core::fmt::Display for Metadata<'a> {

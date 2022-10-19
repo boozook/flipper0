@@ -4,7 +4,7 @@
 #![cfg_attr(feature = "allocator", feature(allocator_api))]
 #![cfg_attr(feature = "allocator", feature(alloc_layout_extra))]
 #![cfg_attr(feature = "allocator", feature(nonnull_slice_from_raw_parts))]
-#![cfg_attr(feature = "panic", feature(core_intrinsics))]
+#![feature(core_intrinsics)]
 #![feature(try_trait_v2)]
 #![feature(try_trait_v2_residual)]
 #![feature(error_in_core)]
@@ -16,10 +16,12 @@ extern crate alloc as _;
 pub mod alloc;
 
 
-// re-export proc-macros:
-#[allow(unused_imports)]
-#[macro_use]
+// re-export flipper0-macro:
+#[cfg_attr(feature = "macro", allow(unused_imports))]
+#[cfg_attr(feature = "macro", macro_use)]
+#[cfg(feature = "macro")]
 extern crate proc_macros;
+#[cfg(feature = "macro")]
 pub use proc_macros::*;
 
 

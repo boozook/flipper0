@@ -31,8 +31,6 @@ test = false
 [dependencies.flipper0-sys]
 version = "*"
 path = "../.."
-default-features = true
-features = []
 
 
 [build-dependencies.fam]

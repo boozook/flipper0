@@ -258,9 +258,23 @@ mod tests {
 		assert!(has_b.sig.abi.is_some());
 		assert!(no.sig.abi.is_some());
 
-		assert_eq!(Some(parse_quote! { extern "C" }), has_a.sig.abi);
-		assert_eq!(Some(parse_quote! { extern }), has_b.sig.abi);
-		assert_eq!(Some(parse_quote! { extern }), no.sig.abi);
+		let expected_c: Abi = parse_quote! { extern "C" };
+		let expected: Abi = parse_quote! { extern };
+
+		assert!(has_a.sig
+		             .abi
+		             .filter(|abi| abi.to_token_stream().to_string() == expected_c.to_token_stream().to_string())
+		             .is_some());
+
+		assert!(has_b.sig
+		             .abi
+		             .filter(|abi| abi.to_token_stream().to_string() == expected.to_token_stream().to_string())
+		             .is_some());
+
+		assert!(no.sig
+		          .abi
+		          .filter(|abi| abi.to_token_stream().to_string() == expected.to_token_stream().to_string())
+		          .is_some());
 	}
 
 	#[test]
@@ -274,8 +288,17 @@ mod tests {
 		assert_eq!(1, has.sig.inputs.len());
 		assert_eq!(1, no.sig.inputs.len());
 
-		assert_eq!(has.sig.inputs[0], parse_quote! { a: A });
-		assert_eq!(no.sig.inputs[0], parse_quote! { _: *mut u8 });
+		let expected_has: FnArg = parse_quote! { a: A };
+		let expected_not: FnArg = parse_quote! { _: *mut u8 };
+
+		assert_eq!(
+		           has.sig.inputs[0].to_token_stream().to_string(),
+		           expected_has.to_token_stream().to_string()
+		);
+		assert_eq!(
+		           no.sig.inputs[0].to_token_stream().to_string(),
+		           expected_not.to_token_stream().to_string()
+		);
 	}
 
 	#[test]
