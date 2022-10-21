@@ -99,10 +99,9 @@ jobs:
     name: Build bindings [${{ matrix.rev }}] ${{ matrix.profile && 'R' || 'D' }} (${{ matrix.os.short }})
 
     needs: cfg
-    # TODO: not just `gen/`, but API/SDK-VERSION file
+    # TODO: check API/SDK-VERSION file
     # TODO: or need to test with release-candidate
-    if: needs.cfg.outputs.mod-gen ||
-      needs.cfg.outputs.mod-flipper0-sys-build
+    if: needs.cfg.outputs.mod-flipper0-sys-build
     runs-on: ${{ matrix.os.full }}
 
     strategy:
