@@ -1,3 +1,5 @@
+cargo-features = ["per-package-target"]
+
 [workspace]
 resolver = "2"
 members = [
@@ -27,6 +29,8 @@ license = "MIT"
 readme = "README.md"
 
 rust-version = "1.66"
+default-target = "thumbv7em-none-eabihf"
+
 build = "src/build/main.rs"
 
 include = [
@@ -105,7 +109,7 @@ path = "build/common/cfg"
 
 [build-dependencies.bindgen]
 version = "0.60.1"
-features = ["runtime", "which-rustfmt", "logging"]
+features = ["runtime", "which-rustfmt"]
 default-features = true
 
 

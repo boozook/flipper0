@@ -1,0 +1,17 @@
+# doc: https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+
+version: 2
+updates:
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: weekly
+    allow:
+      - dependency-type: all
+    labels:
+      - dependencies
+    # milestone: 1
+    reviewers:
+      - boozook
+
+enable-beta-ecosystems: true

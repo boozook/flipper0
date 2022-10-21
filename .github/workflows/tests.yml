@@ -2,8 +2,11 @@ name: Tests
 on:
   pull_request:
   push:
-    branches:
-      - master
+    branches: [master]
+
+defaults:
+  run:
+    shell: bash
 
 env:
   RUSTUP_MAX_RETRIES: 10
@@ -19,61 +22,47 @@ env:
 
 jobs:
   test-support-crates:
-    needs: style
     name: Test ${{ matrix.crate }} (${{ matrix.os.short }})
+
+    needs: [cfg, test-conditions]
+    if: fromJSON(needs.test-conditions.outputs.support-crates)[0]
     runs-on: ${{ matrix.os.full }}
 
-    defaults:
-      run:
-        shell: bash
-
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         os:
           - { full: macos-latest, short: macos }
           - { full: ubuntu-latest, short: linux }
           - { full: windows-latest, short: win }
-        crate:
-          - fam
-          - flipper0-build-cfg
-          - flipper0-fam-build
-          - flipper0-fap-build
-          - flipper0-macro
+        crate: ${{ fromJSON(needs.test-conditions.outputs.support-crates) }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Rust toolchain
-        run: rustup update; rustup install nightly
+        run: rustup show
 
       - name: Cache Cargo
         uses: actions/cache@v3
         with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
+          path: ${{ needs.cfg.outputs.cargo-cache-paths }}
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('rust-toolchain.toml') }}
           restore-keys: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}-${{ hashFiles('rust-toolchain.toml') }}
 
       - name: Check
-        run: cargo +nightly check -p=${{ matrix.crate }}
+        run: cargo check -p=${{ matrix.crate }}
 
       - name: Test
-        run: cargo +nightly test -p=${{ matrix.crate }} --no-fail-fast
+        run: cargo test -p=${{ matrix.crate }} --no-fail-fast
 
   build-bindings-prebuilt:
-    needs: test-support-crates
-    name: Build ${{ matrix.crate }} ${{ matrix.profile && 'R' || 'D' }} [prebuilt] (${{ matrix.os.short }})
-    runs-on: ${{ matrix.os.full }}
+    name: Build ${{ matrix.crate }} [prebuilt] ${{ matrix.profile && 'R' || 'D' }} (${{ matrix.os.short }})
 
-    defaults:
-      run:
-        shell: bash
+    needs: [cfg, test-conditions]
+    if: fromJSON(needs.test-conditions.outputs.main-crates)[0]
+    runs-on: ${{ matrix.os.full }}
 
     strategy:
       fail-fast: true
@@ -82,9 +71,7 @@ jobs:
           - { full: macos-latest, short: macos }
           - { full: ubuntu-latest, short: linux }
           - { full: windows-latest, short: win }
-        crate:
-          - flipper0-sys
-          - flipper0
+        crate: ${{ fromJSON(needs.test-conditions.outputs.main-crates) }}
         profile:
           - "" # debug
           - --release
@@ -98,33 +85,25 @@ jobs:
       - name: Cache Cargo
         uses: actions/cache@v3
         with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
+          path: ${{ needs.cfg.outputs.cargo-cache-paths }}
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('rust-toolchain.toml') }}
           restore-keys: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}-${{ hashFiles('rust-toolchain.toml') }}
 
       - name: Rust toolchain
-        run: rustup update; rustup install nightly; rustup target add thumbv7em-none-eabihf
+        run: rustup show
 
       - name: Build
-        run: cargo +nightly build -p=${{ matrix.crate }} ${{ matrix.profile }} ${{ matrix.target }}
+        run: cargo build -p=${{ matrix.crate }} ${{ matrix.profile }} ${{ matrix.target }}
 
   build-bindings-source:
-    needs:
-      - build-bindings-prebuilt
-      - test-support-crates
-      - random
-    if: needs.random.outputs.value == 1
-    name: Build bindings ${{ matrix.profile && 'R' || 'D' }} [${{ matrix.rev }}] (${{ matrix.os.short }})
-    runs-on: ${{ matrix.os.full }}
+    name: Build bindings [${{ matrix.rev }}] ${{ matrix.profile && 'R' || 'D' }} (${{ matrix.os.short }})
 
-    defaults:
-      run:
-        shell: bash
+    needs: cfg
+    # TODO: not just `gen/`, but API/SDK-VERSION file
+    # TODO: or need to test with release-candidate
+    if: needs.cfg.outputs.mod-gen ||
+      needs.cfg.outputs.mod-flipper0-sys-build
+    runs-on: ${{ matrix.os.full }}
 
     strategy:
       fail-fast: true
@@ -139,12 +118,8 @@ jobs:
         target:
           - thumbv7em-none-eabihf
         rev:
-          - 0.69.0 # minimal supported version
+          - ${{ needs.cfg.outputs.def-sdk-ver }}
           - release-candidate
-        features:
-          - --no-default-features --features="use-local-sdk"
-          - --no-default-features --features="use-local-sdk, panic, macro, allocator-global, oom-global"
-          - --no-default-features --features="use-local-sdk, panic, macro, allocator-global, oom-global, derive-default, derive-eq, derive-copy, derive-hash, derive-ord, derive-partialeq, derive-partialord, derive-debug"
 
     steps:
       - name: Checkout repository
@@ -153,17 +128,12 @@ jobs:
       - name: Cache Cargo
         uses: actions/cache@v3
         with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
+          path: ${{ needs.cfg.outputs.cargo-cache-paths }}
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('rust-toolchain.toml') }}
           restore-keys: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}-${{ hashFiles('rust-toolchain.toml') }}
 
       - name: Rust toolchain
-        run: rustup update; rustup install nightly; rustup target add ${{ matrix.target }}
+        run: rustup show
 
       - name: Cache SDK
         uses: actions/cache@v3
@@ -199,46 +169,64 @@ jobs:
             ./fbt${{ env.FBT_SHELL_EXT || '' }}
           fi
 
-      - name: Build flipper0-sys
-        run: cargo +nightly build -p=flipper0-sys ${{ matrix.profile }} --target=${{ matrix.target }} ${{ matrix.features }}
+      - name: Build flipper0-sys (no features)
+        run:
+          cargo build -p=flipper0-sys ${{ matrix.profile }} --target=${{ matrix.target }}
+          --no-default-features --features="use-local-sdk"
+      - name: Build flipper0-sys (min features)
+        run:
+          cargo build -p=flipper0-sys ${{ matrix.profile }} --target=${{ matrix.target }}
+          --no-default-features --features="use-local-sdk, panic, macro, allocator-global, oom-global"
+      - name: Build flipper0-sys (max features)
+        run:
+          cargo build -p=flipper0-sys ${{ matrix.profile }} --target=${{ matrix.target }}
+          --no-default-features --features="use-local-sdk, panic, macro, allocator-global, oom-global, derive-default, derive-eq, derive-copy, derive-hash, derive-ord, derive-partialeq, derive-partialord, derive-debug"
 
-      - name: Build flipper0
-        # TODO: not supported yet
+      - name: Build flipper0 (no features)
         if: ${{ runner.os != 'Windows' }}
-        run: cargo +nightly build -p=flipper0 ${{ matrix.profile }} --target=${{ matrix.target }} ${{ matrix.features }}
+        run:
+          cargo build -p=flipper0 ${{ matrix.profile }} --target=${{ matrix.target }}
+          --no-default-features --features="use-local-sdk"
+      - name: Build flipper0 (min features)
+        if: ${{ runner.os != 'Windows' }}
+        run:
+          cargo build -p=flipper0 ${{ matrix.profile }} --target=${{ matrix.target }}
+          --no-default-features --features="use-local-sdk, panic, macro, allocator-global, oom-global"
+      - name: Build flipper0 (max features)
+        if: ${{ runner.os != 'Windows' }}
+        run:
+          cargo build -p=flipper0 ${{ matrix.profile }} --target=${{ matrix.target }}
+          --no-default-features --features="use-local-sdk, panic, macro, allocator-global, oom-global, derive-default, derive-eq, derive-copy, derive-hash, derive-ord, derive-partialeq, derive-partialord, derive-debug"
 
-  build-examples:
+  # TODO: conditional, split to faps/non-faps
+  build-example-crates:
+    name: Build E ${{ matrix.crate.name }} [${{ matrix.rev }}] ${{ matrix.profile && 'R' || 'D' }} (${{ matrix.os.short }})
+
     needs:
+      - cfg
       - build-bindings-prebuilt
-      - random
-    if: needs.random.outputs.value == 0
-    name: Build E ${{ matrix.crate.name }} ${{ matrix.profile && 'R' || 'D' }} [${{ matrix.rev }}] (${{ matrix.os.short }})
+    if: needs.cfg.outputs.mod-examples ||
+      needs.cfg.outputs.mod-build-support ||
+      needs.cfg.outputs.mod-flipper0-any
     runs-on: ${{ matrix.os.full }}
 
-    defaults:
-      run:
-        shell: bash
-
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         os:
           - { full: macos-latest, short: macos }
           - { full: ubuntu-latest, short: linux }
-          # TODO: not supported yet
-          # - { full: windows-latest, short: win }
         crate:
-          - { name: hello-fap, arg: --example, fap: false }
-          - { name: fap-manifest-metadata-example, arg: -p, fap: false }
-          - { name: fap-manifest-toml-example, arg: -p, fap: false }
-          - { name: fap-build-example, arg: -p, fap: true }
-          - { name: main-macro-example, arg: -p, fap: true }
-          - { name: fs-example, arg: -p, fap: true }
+          - { name: fap-manifest-metadata-example, fap: false }
+          - { name: fap-manifest-toml-example, fap: false }
+          - { name: fap-build-example, fap: true }
+          - { name: main-macro-example, fap: true }
+          - { name: fs-example, fap: true }
         profile:
-          - --release
+          # - --release # TODO: uncomment this
           - ""
         rev:
-          - 0.69.0 # minimal supported version
+          - ${{ needs.cfg.outputs.def-sdk-ver }}
           - release-candidate
 
     steps:
@@ -248,17 +236,12 @@ jobs:
       - name: Cache Cargo
         uses: actions/cache@v3
         with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
+          path: ${{ needs.cfg.outputs.cargo-cache-paths }}
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('rust-toolchain.toml') }}
           restore-keys: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}-${{ hashFiles('rust-toolchain.toml') }}
 
       - name: Rust toolchain
-        run: rustup update; rustup install nightly; rustup target add thumbv7em-none-eabihf
+        run: rustup show
 
       - name: Cache SDK
         if: matrix.crate.fap
@@ -292,32 +275,40 @@ jobs:
           cd $FLIPPER_FW_SRC_PATH
           if [ ! -d toolchain ]; then
             pip3 install -r scripts/requirements.txt
-            ./fbt${{ env.FBT_SHELL_EXT || '' }}
+            ./fbt${{ env.FBT_SHELL_EXT }}
           fi
 
       - name: Build
-        run: cargo +nightly build ${{ matrix.crate.arg }} ${{ matrix.crate.name }} ${{ matrix.profile }} --target=thumbv7em-none-eabihf
+        run: cargo build -p=${{ matrix.crate.name }} ${{ matrix.profile }} --target=thumbv7em-none-eabihf
 
+      # TODO: result | grep "error", then
+      # https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-an-error-message
       - name: FBT
         if: matrix.crate.fap
         run: |
           cd $FLIPPER_FW_SRC_PATH
-          ./fbt${{ env.FBT_SHELL_EXT || '' }} fap_${{ matrix.crate.name }}
-          # COMPACT=1 DEBUG=1
+          ./fbt${{ env.FBT_SHELL_EXT }} fap_${{ matrix.crate.name }}
+          # COMPACT=${{ matrix.profile && 1 || 0 }} DEBUG=${{ matrix.profile && 0 || 1 }}
 
-  style:
-    name: Style
-    runs-on: ${{ matrix.os }}
+  # tested, ok
+  build-crates-examples:
+    name: Build E ${{ matrix.profile && 'R' || 'D' }} (${{ matrix.os.short }})
 
-    defaults:
-      run:
-        shell: bash
+    needs: [cfg, test-conditions]
+    if: needs.cfg.outputs.mod-crates-examples ||
+      needs.cfg.test-conditions.flipper0-sys
+    runs-on: ${{ matrix.os.full }}
 
     strategy:
       fail-fast: false
       matrix:
         os:
-          - ubuntu-latest
+          - { full: macos-latest, short: macos }
+          - { full: ubuntu-latest, short: linux }
+        profile:
+          - "" # debug
+          - --release
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -325,45 +316,369 @@ jobs:
       - name: Cache Cargo
         uses: actions/cache@v3
         with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
+          path: ${{ needs.cfg.outputs.cargo-cache-paths }}
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('rust-toolchain.toml') }}
           restore-keys: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}-${{ hashFiles('rust-toolchain.toml') }}
 
-      - name: Fmt
-        run: cargo fmt --all -- --check
+      - name: Rust toolchain
+        run: rustup show
 
-      # - name: Install Clippy
-      #   run: rustup component add clippy --toolchain=nightly
+      - name: Build
+        run: cargo build --all --examples ${{ matrix.profile }}
 
-      # - name: Clippy
-      #   uses: actions-rs/clippy-check@v1.0.7
-      #   with:
-      #     name: Clippy report
-      #     token: ${{ secrets.GITHUB_TOKEN }}
-      #     args: --all
+  style:
+    name: Style
 
-  # Just a little jobs number reducer.
-  random:
-    name: "🎲 (${{ github.event.pull_request.commits || 0 }})"
+    needs: cfg
+    if: needs.cfg.outputs.mod-any-src-rs
     runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        shell: bash
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Number
-        id: number
+      - name: Cache Cargo
+        uses: actions/cache@v3
+        with:
+          path: ${{ needs.cfg.outputs.cargo-cache-paths }}
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('rust-toolchain.toml') }}
+          restore-keys: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}-${{ hashFiles('rust-toolchain.toml') }}
+
+      - name: Check
+        run: cargo fmt --all -- --check
+
+  # tested, ok
+  clippy:
+    name: Clippy [${{ matrix.rev }}]
+
+    needs: cfg
+    if: needs.cfg.outputs.mod-any-src-rs
+    runs-on: ubuntu-latest
+
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        rev:
+          - ${{ needs.cfg.outputs.def-sdk-ver }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # SDK
+      - name: Cache SDK
+        uses: actions/cache@v3
+        id: cache-sdk
+        with:
+          path: ${{ env.FLIPPER_FW_SRC_PATH }}
+          key: f0-fw-${{ matrix.rev }}-${{ runner.os }}
+
+      - name: fix permissions
+        if: steps.cache-sdk.outputs.cache-hit == 'true'
+        run: chmod -R a+x ${{ env.FLIPPER_FW_SRC_PATH }}
+
+      - name: Checkout SDK
+        if: (steps.cache-sdk.outputs.cache-hit != 'true') || contains('release-candidate, dev', matrix.rev)
+        uses: actions/checkout@v3
+        with:
+          repository: flipperdevices/flipperzero-firmware
+          path: ${{ env.FLIPPER_FW_SRC_PATH }}
+          ref: ${{ matrix.rev }}
+          submodules: true
+          clean: false
+
+      - name: Setup SDK
+        if: (steps.cache-sdk.outputs.cache-hit != 'true') || contains('release-candidate, dev', matrix.rev)
         run: |
-          echo "value=$(expr ${{ github.event.pull_request.commits || 2 }} % 2)" >> $GITHUB_OUTPUT
+          cd $FLIPPER_FW_SRC_PATH
+          if [ ! -d toolchain ]; then
+            pip3 install -r scripts/requirements.txt
+            ./fbt
+          fi
+
+      # Rust Toolchain
+      - name: Cache Cargo
+        uses: actions/cache@v3
+        with:
+          path: ${{ needs.cfg.outputs.cargo-cache-paths }}
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('rust-toolchain.toml') }}+tools
+          restore-keys: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}-${{ hashFiles('rust-toolchain.toml') }}
+
+      - name: Rust toolchain
+        run: rustup show
+
+      - name: Install Clippy
+        run: rustup component add clippy
+
+      - name: Install Tools
+        uses: taiki-e/install-action@v1.14.0
+        with: { tool: "clippy-sarif,sarif-fmt,jset" }
+        continue-on-error: true
+
+      - name: Install Clippy Sarif
+        run: which clippy-sarif || cargo install clippy-sarif sarif-fmt
+
+      - name: Install Jset
+        run: which jset || cargo install jset
+
+      # Build
+      - name: Build Support Crates
+        run: cargo clippy --message-format=json
+          --all-features --all-targets
+          -p=fam
+          -p=flipper0-build-cfg
+          -p=flipper0-fam-build
+          -p=flipper0-fap-build
+          -p=flipper0-macro |
+          clippy-sarif | tee support-crates-clippy.sarif | sarif-fmt
+        continue-on-error: true
+
+      - name: Build Main Crates
+        run: cargo clippy --message-format=json
+          --all-features
+          -p=flipper0
+          -p=flipper0-sys |
+          clippy-sarif | tee main-crates-clippy.sarif | sarif-fmt
+        continue-on-error: true
+
+      - name: Build Example Crates
+        run: cargo clippy --message-format=json
+          --all-features --all-targets
+          -p=fap-manifest-metadata-example
+          -p=fap-manifest-toml-example
+          -p=fap-build-example
+          -p=main-macro-example
+          -p=fs-example |
+          clippy-sarif | tee example-crates-clippy | sarif-fmt
+        continue-on-error: true
+
+      # Results
+      - name: Merge Results
+        run: jset union ./*.sarif > ./all-clippy.sarif
+
+      - name: Upload
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: all-clippy.sarif
+          wait-for-processing: true
+
+      - name: Clean Results
+        # For not to put it in the cache:
+        run: rm ./*.sarif
+
+  cfg:
+    name: 🛠 Config
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: ${{ github.event.pull_request.commits || 1 }}
+
+      # echo "value=$(git diff --quiet HEAD~${{ github.event.pull_request.commits || 1 }} HEAD -- path/here || echo $?)
+
+      # mb use YassinEldeeb/has-changed-path?
+      - id: ci
+        uses: marceloprado/has-changed-path@v1
+        with:
+          paths: .github/
+
+      - id: examples
+        uses: marceloprado/has-changed-path@v1
+        with:
+          paths: examples/
+
+      - id: crates-examples
+        uses: marceloprado/has-changed-path@v1
+        if: steps.examples.outputs.changed == 'true'
+        with:
+          paths: examples/*.rs
+
+      - id: build-support
+        uses: marceloprado/has-changed-path@v1
+        with:
+          paths: build/
+
+      - id: fam-build
+        uses: marceloprado/has-changed-path@v1
+        if: steps.build-support.outputs.changed == 'true'
+        with:
+          paths: build/fam-build
+
+      - id: fap-build
+        uses: marceloprado/has-changed-path@v1
+        if: steps.build-support.outputs.changed == 'true'
+        with:
+          paths: build/fap-build
+
+      - id: proc-macro
+        uses: marceloprado/has-changed-path@v1
+        if: steps.build-support.outputs.changed == 'true'
+        with: { paths: build/proc-macro }
+
+      - id: common
+        uses: marceloprado/has-changed-path@v1
+        if: steps.build-support.outputs.changed == 'true'
+        with: { paths: build/common }
+
+      - id: fam
+        uses: marceloprado/has-changed-path@v1
+        with: { paths: format/fam }
+
+      - id: flipper0
+        uses: marceloprado/has-changed-path@v1
+        with: { paths: flipper/ }
+
+      - id: flipper0-sys
+        uses: marceloprado/has-changed-path@v1
+        with: { paths: src/ Cargo.toml }
+
+      - id: flipper0-sys-build
+        uses: marceloprado/has-changed-path@v1
+        with: { paths: src/build/ }
+
+      - id: gen
+        uses: marceloprado/has-changed-path@v1
+        with: { paths: gen/ }
+
+      - id: gen-api-ver
+        uses: marceloprado/has-changed-path@v1
+        if: steps.gen.outputs.changed == 'true'
+        with: { paths: gen/API-VERSION }
+
+      - id: any-src-rs
+        uses: marceloprado/has-changed-path@v1
+        with: { paths: "**/*.rs" }
+
+      - id: gen-api-ver-file
+        run: echo "value=$(cat gen/API-VERSION || '')" >> $GITHUB_OUTPUT
+
+      - id: gen-sdk-ver-file
+        run: echo "value=$(cat gen/SDK-VERSION || '')" >> $GITHUB_OUTPUT
 
     outputs:
-      value: ${{ steps.number.outputs.value }}
+      cargo-cache-paths: |
+        ~/.cargo/bin/
+        ~/.cargo/registry/index/
+        ~/.cargo/registry/cache/
+        ~/.cargo/git/db/
+        target/
+      # minimal supported version:
+      # TODO: read from file:
+      def-sdk-ver: 0.69.0
+      # TODO: test this:
+      # def-sdk-ver: ${{ steps.gen-sdk-ver-file.outputs.value || '0.69.0' }}
+      def-api-ver: ${{ steps.gen-api-ver-file.outputs.value || '2.2' }}
+      mod-fam: ${{ steps.fam.outputs.changed == 'true' || '' }}
+      mod-flipper0-build-common: ${{ steps.common.outputs.changed == 'true' || '' }}
+      mod-flipper0-fam-build: ${{ steps.fam-build.outputs.changed == 'true' || '' }}
+      mod-flipper0-fap-build: ${{ steps.fap-build.outputs.changed == 'true' || '' }}
+      mod-flipper0-macro: ${{ steps.proc-macro.outputs.changed == 'true' || '' }}
+      mod-flipper0-any: ${{ steps.flipper0-sys.outputs.changed == 'true' || steps.flipper0.outputs.changed == 'true' || '' }}
+      mod-flipper0-sys: ${{ steps.flipper0-sys.outputs.changed == 'true' || '' }}
+      mod-flipper0-sys-build: ${{ steps.flipper0-sys-build.outputs.changed == 'true' || '' }}
+      mod-flipper0: ${{ steps.flipper0.outputs.changed == 'true' || '' }}
+      mod-examples: ${{ steps.examples.outputs.changed == 'true' || '' }}
+      mod-crates-examples: ${{ steps.crates-examples.outputs.changed == 'true' || '' }}
+      mod-ci: ${{ steps.ci.outputs.changed == 'true' || '' }}
+      mod-build-support: ${{ steps.build-support.outputs.changed == 'true' || '' }}
+      mod-gen: ${{ steps.gen.outputs.changed == 'true' || '' }}
+      mod-api-ver: ${{ steps.gen-api-ver.outputs.changed == 'true' || '' }}
+      mod-any-src-rs: ${{ steps.any-src-rs.outputs.changed == 'true' || '' }}
+
+  test-conditions:
+    name: 🛠 Conditional Decisions
+
+    needs: cfg
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # TODO: build deps-graph just by `cargo metadata` + handy additions such as `gen/`.
+
+      - id: support-crates-matrix-list
+        run: >-
+          echo value=[
+          ${{ needs.cfg.outputs.mod-fam && '\"fam\",' || '' }}
+          ${{ needs.cfg.outputs.mod-flipper0-build-common && '\"flipper0-build-cfg\",' || '' }}
+          ${{ (needs.cfg.outputs.mod-flipper0-fam-build || needs.cfg.outputs.mod-fam) && '\"flipper0-fam-build\",' || '' }}
+          ${{
+          (  needs.cfg.outputs.mod-flipper0-fap-build
+          || needs.cfg.outputs.mod-flipper0-build-common
+          || (needs.cfg.outputs.mod-flipper0-fam-build || needs.cfg.outputs.mod-fam)
+          ) && '\"flipper0-fap-build\",' || '' }}
+          ${{
+          ( needs.cfg.outputs.mod-flipper0-macro
+          || (needs.cfg.outputs.mod-flipper0-fam-build || needs.cfg.outputs.mod-fam)
+          ) && '\"flipper0-macro\",' || '' }}
+          ] >> $GITHUB_OUTPUT
+
+      - id: main-crates-matrix-list
+        run: >-
+          echo value=[
+          ${{
+          (  needs.cfg.outputs.mod-flipper0-sys
+          || needs.cfg.outputs.mod-flipper0-build-common
+          || needs.cfg.outputs.mod-flipper0-macro
+          || needs.cfg.outputs.mod-fam
+          || needs.cfg.outputs.mod-gen
+          ) && '\"flipper0-sys\",' || '' }}
+          ${{
+          (  needs.cfg.outputs.mod-flipper0
+          || needs.cfg.outputs.mod-flipper0-sys
+          || needs.cfg.outputs.mod-flipper0-build-common
+          || needs.cfg.outputs.mod-flipper0-macro
+          || needs.cfg.outputs.mod-fam
+          || needs.cfg.outputs.mod-gen
+          ) && '\"flipper0\",' || '' }}
+          ] >> $GITHUB_OUTPUT
+
+    # decisions, should we test these things:
+    outputs:
+      support-crates: ${{ steps.support-crates-matrix-list.outputs.value }}
+      main-crates: ${{ steps.main-crates-matrix-list.outputs.value }}
+      flipper0-sys: >-
+        ${{
+           needs.cfg.outputs.mod-flipper0-sys
+        || needs.cfg.outputs.mod-flipper0-build-common
+        || needs.cfg.outputs.mod-flipper0-macro
+        || needs.cfg.outputs.mod-fam
+        || needs.cfg.outputs.mod-gen
+        || ''
+        }}
+
+      flipper0: >-
+        ${{
+           needs.cfg.outputs.mod-flipper0
+        || needs.cfg.outputs.mod-flipper0-sys
+        || needs.cfg.outputs.mod-flipper0-build-common
+        || needs.cfg.outputs.mod-flipper0-macro
+        || needs.cfg.outputs.mod-fam
+        || needs.cfg.outputs.mod-gen
+        || ''
+        }}
+
+# # only for debug purposes:
+# cfg-view:
+#   name: 🛠 View
+
+#   needs: [cfg, test-conditions]
+#   runs-on: ubuntu-latest
+
+#   steps:
+#     - name: Checkout repository
+#       uses: actions/checkout@v3
+
+#     - name: Config
+#       run: echo '${{ toJSON( needs.cfg.outputs ) }}'
+
+#     - name: Conditions
+#       run: echo '${{ toJSON( needs.test-conditions.outputs ) }}'
