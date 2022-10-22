@@ -32,6 +32,9 @@ pub mod ffi {
 	#![allow(non_upper_case_globals)]
 	#![allow(non_camel_case_types)]
 	#![allow(non_snake_case)]
+	#![allow(clippy::missing_safety_doc)]
+	#![allow(clippy::useless_transmute)]
+	#![allow(clippy::transmute_int_to_bool)]
 
 	#[cfg(all(test, no_std))]
 	use core::prelude::*;
