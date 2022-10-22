@@ -1,9 +1,12 @@
+cargo-features = ["per-package-target"]
+
 [workspace]
 resolver = "2"
 members = [
 	"flipper",
 	"format/*",
 	"build/*-build",
+	"build/*-macro",
 	"build/common/*",
 	"examples/*",
 ]
@@ -13,7 +16,7 @@ default-members = ["flipper", "."]
 [package]
 name = "flipper0-sys"
 description = "Bindings for Flipper Zero fw"
-version = "0.2.8"
+version = "0.2.10"
 edition = "2021"
 
 authors = ["Alex Koz <a@koz.email>"]
@@ -26,6 +29,8 @@ license = "MIT"
 readme = "README.md"
 
 rust-version = "1.66"
+default-target = "thumbv7em-none-eabihf"
+
 build = "src/build/main.rs"
 
 include = [
@@ -86,7 +91,7 @@ macro = ["proc-macros", "proc-macros/export-fam-infallible"]
 
 [dependencies.proc-macros]
 package = "flipper0-macro"
-version = "0.1"
+version = "0.1.2"
 path = "build/proc-macro"
 optional = true
 
@@ -99,12 +104,12 @@ csv = "1.1"
 
 [build-dependencies.build-cfg]
 package = "flipper0-build-cfg"
-version = "0.1.1"
+version = "0.1.2"
 path = "build/common/cfg"
 
 [build-dependencies.bindgen]
 version = "0.60.1"
-features = ["runtime", "which-rustfmt", "logging"]
+features = ["runtime", "which-rustfmt"]
 default-features = true
 
 

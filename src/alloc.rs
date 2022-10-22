@@ -1,8 +1,9 @@
 extern crate alloc;
 pub use alloc::*;
 
-use core::alloc::{GlobalAlloc, Layout};
+#[cfg(feature = "allocator")]
 use core::alloc::{Allocator, AllocError};
+use core::alloc::{GlobalAlloc, Layout};
 use core::ffi::c_void;
 use core::ptr::NonNull;
 use alloc::ffi::CString;
@@ -15,8 +16,10 @@ use crate::os::crash;
 #[cfg_attr(feature = "allocator-global", global_allocator)]
 pub static GLOBAL: Furi = Furi;
 
+#[cfg(any(feature = "allocator", feature = "allocator-global"))]
 pub struct Furi;
 
+#[cfg(feature = "allocator-global")]
 unsafe impl GlobalAlloc for Furi {
 	#[inline(always)]
 	unsafe fn alloc(&self, layout: Layout) -> *mut u8 { aligned_malloc(layout.size(), layout.align()) as *mut u8 }
@@ -30,6 +33,7 @@ unsafe impl GlobalAlloc for Furi {
 
 
 /// Simple `allocator_api` implementation
+#[cfg(feature = "allocator")]
 unsafe impl Allocator for Furi {
 	#[inline]
 	fn allocate(&self, layout: Layout) -> Result<NonNull<[u8]>, AllocError> {

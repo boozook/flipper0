@@ -1,7 +1,9 @@
+cargo-features = ["per-package-target"]
+
 [package]
 name = "flipper0"
 description = "API for Flipper Zero fw"
-version = "0.3.2"
+version = "0.3.4"
 edition = "2021"
 
 authors = ["Alex Koz <a@koz.email>"]
@@ -13,6 +15,8 @@ repository = "https://github.com/boozook/flipper0.git"
 license = "MIT"
 readme = "README.md"
 
+rust-version = "1.66"
+default-target = "thumbv7em-none-eabihf"
 
 [badges]
 maintenance = { status = "actively-developed" }
@@ -51,7 +55,7 @@ macro = ["sys/macro"]
 
 [dependencies.sys]
 package = "flipper0-sys"
-version = "0.2.8"
+version = "0.2.10"
 path = ".."
 default-features = false
 features = ["derive-debug"]

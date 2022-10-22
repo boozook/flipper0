@@ -1,3 +1,5 @@
+cargo-features = ["per-package-target"]
+
 [package]
 name = "fs-example"
 version = "0.1.0"
@@ -8,6 +10,8 @@ homepage = "https://github.com/boozook/flipper0/tree/master/examples/fs"
 publish = false
 
 build = "../app-build/build.rs"
+forced-target = "thumbv7em-none-eabihf"
+default-target = "thumbv7em-none-eabihf"
 
 
 [package.metadata.fap]

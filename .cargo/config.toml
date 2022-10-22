@@ -7,3 +7,7 @@ rustflags = ["-C", "target-cpu=native"]
 
 [target.thumbv7em-none-eabihf]
 rustflags = ["-C", "target-cpu=cortex-m4"]
+
+
+[unstable]
+per-package-target = true

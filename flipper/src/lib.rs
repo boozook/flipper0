@@ -7,12 +7,14 @@
 #![feature(cstr_from_bytes_until_nul)]
 #![feature(type_alias_impl_trait)]
 #![feature(trait_alias)]
+#![feature(trivial_bounds)]
 
 // re-export proc-macros:
 #[allow(unused_imports)]
 #[macro_use]
 pub extern crate sys;
 pub use sys::alloc;
+#[cfg(feature = "macro")]
 pub use sys::main;
 
 

@@ -1,4 +1,5 @@
 [toolchain]
-channel = "nightly"
+channel = "nightly-2022-10-19"
 targets = ["thumbv7em-none-eabihf"]
 components = ["rustfmt"]
+profile = "default"
