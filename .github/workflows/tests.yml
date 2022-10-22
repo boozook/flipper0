@@ -698,19 +698,19 @@ jobs:
         || ''
         }}
 
-  # only for debug purposes:
-  cfg-view:
-    name: 🛠 View
+  # # only for debug purposes:
+  # cfg-view:
+  #   name: 🛠 View
 
-    needs: [cfg, test-conditions]
-    runs-on: ubuntu-latest
+  #   needs: [cfg, test-conditions]
+  #   runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v3
 
-      - name: Config
-        run: echo '${{ toJSON( needs.cfg.outputs ) }}'
+  #     - name: Config
+  #       run: echo '${{ toJSON( needs.cfg.outputs ) }}'
 
-      - name: Conditions
-        run: echo '${{ toJSON( needs.test-conditions.outputs ) }}'
+  #     - name: Conditions
+  #       run: echo '${{ toJSON( needs.test-conditions.outputs ) }}'
