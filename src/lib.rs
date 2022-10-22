@@ -49,17 +49,17 @@ pub mod ffi {
 
 
 	#[no_mangle]
-	unsafe fn __exidx_start() -> ! { loop {} }
+	unsafe fn __exidx_start() -> ! { panic!("__exidx_start") }
 	#[no_mangle]
-	unsafe fn __exidx_end() -> ! { loop {} }
+	unsafe fn __exidx_end() -> ! { panic!("__exidx_end") }
 	#[no_mangle]
-	unsafe fn __cxa_call_unexpected() -> ! { loop {} }
+	unsafe fn __cxa_call_unexpected() -> ! { panic!("__cxa_call_unexpected") }
 	#[no_mangle]
-	unsafe fn __gnu_Unwind_Find_exidx() -> ! { loop {} }
+	unsafe fn __gnu_Unwind_Find_exidx() -> ! { panic!("__gnu_Unwind_Find_exidx") }
 	#[no_mangle]
-	unsafe fn __cxa_begin_cleanup() -> ! { loop {} }
+	unsafe fn __cxa_begin_cleanup() -> ! { panic!("__cxa_begin_cleanup") }
 	#[no_mangle]
-	unsafe fn __cxa_type_match() -> ! { loop {} }
+	unsafe fn __cxa_type_match() -> ! { panic!("__cxa_type_match") }
 }
 
 

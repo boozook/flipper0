@@ -68,32 +68,33 @@ pub fn manifest_named<S: AsRef<str>>(filename: S) -> Result<Manifest> {
 	// TODO: support multiple targets.
 	// Now get first, then check more and warn if it is.
 	// Should probably fail instead of warning.
-	let target = targets.next().ok_or(IoError::new(IoErrorKind::NotFound, "target"))?;
+	let target = targets.next().ok_or_else(|| IoError::new(IoErrorKind::NotFound, "target"))?;
 	if targets.next().is_some() {
 		println!("cargo:warning=Multiple targets (libs) does not supported.");
 	}
 
+	#[allow(clippy::bind_instead_of_map)]
 	let mut fap = crate_metadata.metadata
-	                            .map(|meta| meta.fap)
-	                            .take()
-	                            .flatten()
-	                            .ok_or(IoError::new(IoErrorKind::NotFound, "fap crate metadata"))
-	                            .or_else(|_err| {
-		                            #[cfg(feature = "toml")]
-		                            {
-			                            // try to get manifest from Flipper.toml near by Cargo.toml:
-			                            let fap_toml_res = manifest_toml_from(&root.join(FLIPPER_MANIFEST_TOML));
-			                            // report if both not found:
-			                            if fap_toml_res.is_err() {
-				                            println!("cargo:warning=Error: crate metadata not found in `{}`.", manifest.display());
-				                            println!("cargo:warning=Error: `Flipper.toml` not found in `{}`.", root.display());
-			                            }
-			                            fap_toml_res
-		                            }
+	                         .map(|meta| meta.fap)
+	                         .take()
+	                         .flatten()
+	                         .ok_or_else(|| IoError::new(IoErrorKind::NotFound, "fap crate metadata"))
+	                         .or_else(|_err| {
+		                         #[cfg(feature = "toml")]
+		                         {
+			                         // try to get manifest from Flipper.toml near by Cargo.toml:
+			                         let fap_toml_res = manifest_toml_from(&root.join(FLIPPER_MANIFEST_TOML));
+			                         // report if both not found:
+			                         if fap_toml_res.is_err() {
+				                         println!("cargo:warning=Error: crate metadata not found in `{}`.", manifest.display());
+				                         println!("cargo:warning=Error: `Flipper.toml` not found in `{}`.", root.display());
+			                         }
+			                         fap_toml_res
+		                         }
 
-		                            #[rustfmt::skip]
+		                         #[rustfmt::skip]
 		                            #[cfg(not(feature = "toml"))] { Err(_err) }
-	                            })?;
+	                         })?;
 
 	fap.set_defaults()?;
 	fap.sources
@@ -126,7 +127,7 @@ pub fn crate_product(dir: &Path, target: &meta::Target) -> Result<PathBuf> {
 }
 
 
-fn staticlib_name_to_filename(name: &str) -> String { format!("lib{name}.a").replace("-", "_") }
+fn staticlib_name_to_filename(name: &str) -> String { format!("lib{name}.a").replace('-', "_") }
 
 
 pub fn current_target() -> Result<String> {
@@ -215,7 +216,7 @@ impl metadata::FapMetadata {
 			let path = PathBuf::from(&origin);
 			let package: PathBuf = env::var("OUT_DIR")?.into();
 			let filename = path.file_name()
-			                   .ok_or(IoError::new(IoErrorKind::InvalidFilename, path.display().to_string()))?;
+			                   .ok_or_else(|| IoError::new(IoErrorKind::InvalidFilename, path.display().to_string()))?;
 
 			if path.is_relative() {
 				// We cannot link path as-is by first component because of it can contains relative components like `..`.
@@ -226,10 +227,10 @@ impl metadata::FapMetadata {
 					concat.canonicalize().or_else(|_| Ok::<_, IoError>(concat))?
 				};
 
-				soft_link_forced(&full, &package.join(&filename))?;
+				soft_link_forced(&full, &package.join(filename))?;
 				Some(filename.to_str().unwrap().to_owned())
 			} else if path.is_absolute() && fs::try_exists(&path)? {
-				soft_link_forced(&path, &package.join(&filename))?;
+				soft_link_forced(&path, &package.join(filename))?;
 				Some(filename.to_str().unwrap().to_owned())
 			} else {
 				println!("Asset {origin} has not been canonicalized.");

@@ -1,16 +1,16 @@
 use std::env;
-use std::error::Error;
 use std::fs::try_exists;
 use std::path::Path;
 use std::path::PathBuf;
 use crate::consts;
+use crate::Result;
 use crate::source::local_sdk::find_arm_toolchain;
 
 
 const URI: &'static str = "https://github.com/flipperdevices/flipperzero-firmware.git";
 
 
-pub fn git_clone_sdk() -> Result<PathBuf, Box<dyn Error>> {
+pub fn git_clone_sdk() -> Result<PathBuf> {
 	let rev = env::var(consts::env::FLIPPER_NET_SDK_REV_ENV).ok();
 	let branch = env::var(consts::env::FLIPPER_NET_SDK_BRANCH_ENV).ok();
 
@@ -47,13 +47,13 @@ pub fn git_clone_sdk() -> Result<PathBuf, Box<dyn Error>> {
 
 	try_setup(&path)?;
 
-	Ok(PathBuf::from(path))
+	Ok(path)
 }
 
 
 /// Initial setup.
 /// Run fbt, it downloads arm-toolchain if needed
-fn try_setup<P: AsRef<Path>>(root: P) -> Result<(), Box<dyn Error>> {
+fn try_setup<P: AsRef<Path>>(root: P) -> Result {
 	use std::process::Command;
 
 	// check toolchain first

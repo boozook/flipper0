@@ -1,3 +1,4 @@
+#![allow(clippy::large_enum_variant)]
 extern crate fam;
 
 use std::path::Path;
@@ -82,7 +83,7 @@ impl Manifest {
 	fn to_fam_string(&self) -> Result<String> {
 		let source = match self {
 			Manifest::Manifest(manifest) => manifest.try_to_string()?,
-			Manifest::Metadata(metadata) => fam::render_raw_json(&serde_json::to_value(&metadata)?)?,
+			Manifest::Metadata(metadata) => fam::render_raw_json(&serde_json::to_value(metadata)?)?,
 		};
 
 		Ok(source)
@@ -91,7 +92,7 @@ impl Manifest {
 
 	#[doc(hidden)]
 	pub fn to_json_out_dir<P: AsRef<Path>>(&self, fam_path: P) -> Result<()> {
-		let product = IntermediateManifest::new(&self, fam_path.as_ref().to_owned());
+		let product = IntermediateManifest::new(self, fam_path.as_ref().to_owned());
 		let path = IntermediateManifest::path()?;
 		std::fs::write(path, &product.to_json_string()?).map_err(Into::into)
 	}

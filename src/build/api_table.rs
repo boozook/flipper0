@@ -1,8 +1,9 @@
 use super::*;
+use crate::Result;
 use std::io::Read;
 
 
-pub(crate) fn find_read_api_table<P: AsRef<Path>>(root: P) -> Result<(Option<String>, Vec<ApiTableRow<String>>), Box<dyn Error>> {
+pub(crate) fn find_read_api_table<P: AsRef<Path>>(root: P) -> Result<(Option<String>, Vec<ApiTableRow<String>>)> {
 	let root = root.as_ref();
 	let path = root.join(PathBuf::from("firmware/targets/f7/api_symbols.csv"));
 	println!("cargo:rerun-if-changed={}", path.display());
@@ -13,7 +14,7 @@ pub(crate) fn find_read_api_table<P: AsRef<Path>>(root: P) -> Result<(Option<Str
 
 
 /// Read csv table with api symbols
-pub(crate) fn read_api_table<R: Read>(reader: R) -> Result<(Option<String>, Vec<ApiTableRow<String>>), Box<dyn Error>> {
+pub(crate) fn read_api_table<R: Read>(reader: R) -> Result<(Option<String>, Vec<ApiTableRow<String>>)> {
 	let mut version = None;
 	let mut symbols = Vec::new();
 
@@ -37,7 +38,7 @@ pub(crate) fn read_api_table<R: Read>(reader: R) -> Result<(Option<String>, Vec<
 }
 
 
-pub(crate) fn gen_api_table_header(symbols: &[ApiTableRow<String>]) -> Result<PathBuf, Box<dyn Error>> {
+pub(crate) fn gen_api_table_header(symbols: &[ApiTableRow<String>]) -> Result<PathBuf> {
 	let outdir = PathBuf::from(env::var("OUT_DIR")?);
 	let mut result = String::new();
 

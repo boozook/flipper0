@@ -1,4 +1,5 @@
 // TODO: generate it automatically with derive-proc-macro, call inject from build-script.
+// Also satisfy clippy
 
 use core::ops::{Try, FromResidual};
 use core::convert::Infallible;

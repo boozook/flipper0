@@ -7,7 +7,7 @@ use syn::*;
 
 pub fn main(_args: AttributeArgs, item: ItemFn) -> Result<TokenStream> {
 	// first of all check return type and maybe wrap to c-abi function
-	let mut item = match add_return_ty_or_wrap(item.clone())? {
+	let mut item = match add_return_ty_or_wrap(item)? {
 		WrapResult::Same(item) => item,
 		WrapResult::Wrapper(wrapper) => {
 			return Ok(wrapper.to_token_stream());
@@ -38,15 +38,12 @@ pub fn main(_args: AttributeArgs, item: ItemFn) -> Result<TokenStream> {
 
 fn add_no_mangle(f: &mut ItemFn) {
 	if f.attrs.is_empty() ||
-	   f.attrs
-	    .iter()
-	    .find(|attr| {
-		    attr.path
-		        .get_ident()
-		        .filter(|ident| &ident.to_string() == "no_mangle")
-		        .is_some()
-	    })
-	    .is_none()
+	   !f.attrs.iter().any(|attr| {
+		                  attr.path
+		                      .get_ident()
+		                      .filter(|ident| &ident.to_string() == "no_mangle")
+		                      .is_some()
+	                  })
 	{
 		f.attrs.push(parse_quote! { #[no_mangle] });
 	}
@@ -88,7 +85,7 @@ fn add_return_ty_or_wrap(mut f: ItemFn) -> Result<WrapResult> {
 	match f.sig.output {
 		RetDefault => f.sig.output = default,
 		RetType(_, box Infer(_)) => f.sig.output = default,
-		RetType(_, box Path(ref tp)) if result_ty_i32(&tp) => {},
+		RetType(_, box Path(ref tp)) if result_ty_i32(tp) => {},
 		RetType(_, box Path(ref tp)) => {
 			let info = get_result_ty_info(tp)?;
 			wrapper = Some(wrap_main_ret_result(f.clone(), info)?);

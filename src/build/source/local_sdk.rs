@@ -1,5 +1,4 @@
 use std::env;
-use std::error::Error;
 use std::fs::try_exists;
 use std::path::Path;
 use std::path::PathBuf;
@@ -11,21 +10,22 @@ use semver::VersionReq;
 use crate::consts;
 use crate::api_table;
 use crate::source::doc_sdk_metadata_row;
+use crate::Result;
 
 
-pub fn find_arm_toolchain<P: AsRef<Path>>(root: P) -> Result<PathBuf, Box<dyn Error>> {
+pub fn find_arm_toolchain<P: AsRef<Path>>(root: P) -> Result<PathBuf> {
 	let find_arm_toolchain = |root: &Path| {
 		println!("Searching ARM toolchain...");
 
 		let glob = wax::Glob::new("toolchain/*/arm-none-eabi").unwrap();
-		let result = glob.walk_with_behavior(&root, wax::LinkBehavior::ReadTarget)
+		let result = glob.walk_with_behavior(root, wax::LinkBehavior::ReadTarget)
 		                 .not(["toolchain/.*/arm-none-eabi"])
 		                 .map_err(|err| println!("cargo:warning=ERROR: Unable to walk fs. {err}"))
 		                 .ok()?
 		                 .filter_map(|entry| entry.map_err(|err| println!("cargo:warning=ERROR: {err}")).ok())
 		                 .filter(|entry| try_exists(entry.path().join("include")).ok().unwrap_or_default())
 		                 .map(|entry| {
-			                 println!("Found ARM toolchain: {}", entry.to_candidate_path().to_string());
+			                 println!("Found ARM toolchain: {}", entry.to_candidate_path());
 			                 entry.path().to_owned()
 		                 })
 		                 .next();
@@ -36,7 +36,7 @@ pub fn find_arm_toolchain<P: AsRef<Path>>(root: P) -> Result<PathBuf, Box<dyn Er
 		env::var(consts::env::ARM_TOOLCHAIN_PATH_ENV).map_or_else(
 		                                                          |err| {
 			                                                          println!("`{}` {err}.", consts::env::ARM_TOOLCHAIN_PATH_ENV);
-			                                                          find_arm_toolchain(&root.as_ref())
+			                                                          find_arm_toolchain(root.as_ref())
 		                                                          },
 		                                                          |path| {
 			                                                          let path = PathBuf::from(path);
@@ -47,16 +47,16 @@ pub fn find_arm_toolchain<P: AsRef<Path>>(root: P) -> Result<PathBuf, Box<dyn Er
 				                                                                   "cargo:warning=`{}` points to non-existing dir.",
 				                                                                   consts::env::ARM_TOOLCHAIN_PATH_ENV
 				);
-				                                                          find_arm_toolchain(&root.as_ref())
+				                                                          find_arm_toolchain(root.as_ref())
 			                                                          }
 		                                                          },
 		);
 
-	path.ok_or(std::io::Error::new(std::io::ErrorKind::NotFound, consts::env::ARM_TOOLCHAIN_PATH_ENV).into())
+	path.ok_or_else(|| std::io::Error::new(std::io::ErrorKind::NotFound, consts::env::ARM_TOOLCHAIN_PATH_ENV).into())
 }
 
 
-pub fn try_build() -> Result<(), Box<dyn Error>> {
+pub fn try_build() -> Result {
 	let pwd = env::current_dir()?;
 	let cargo_target_triple = env::var("TARGET").expect("TARGET cargo env var");
 
@@ -64,7 +64,7 @@ pub fn try_build() -> Result<(), Box<dyn Error>> {
 	let output_filename = crate::bindings_filename(debug);
 
 	let root = flipper_sdk_path()?;
-	println!("sdk path: `{}`", root.display().to_string());
+	println!("sdk path: `{}`", root.display());
 
 	let (sdk_tags, sdk_rev) = match validate_sdk(&root) {
 		Ok((sdk_tags, sdk_rev)) => (sdk_tags, sdk_rev),
@@ -76,7 +76,7 @@ pub fn try_build() -> Result<(), Box<dyn Error>> {
 
 	let (version, symbols) = api_table::find_read_api_table(&root)?;
 	crate::check_version(
-	                     &version.as_deref().unwrap_or("n/a"),
+	                     version.as_deref().unwrap_or("n/a"),
 	                     consts::support::API_VERSION.parse()?,
 	                     "API",
 	);
@@ -164,11 +164,7 @@ pub fn try_build() -> Result<(), Box<dyn Error>> {
 			        let out_path = PathBuf::from(env::var("OUT_DIR").expect("OUT_DIR cargo env var")).join(output_filename);
 			        println!("bindings output: {}", out_path.display());
 			        bindings.write_to_file(&out_path).expect("Couldn't write bindings!");
-			        println!(
-			                 "cargo:rustc-env={}={}",
-			                 consts::env::BINDINGS_ENV,
-			                 out_path.display().to_string()
-			);
+			        println!("cargo:rustc-env={}={}", consts::env::BINDINGS_ENV, out_path.display());
 		        })
 		        .map_err(|err| err.into())
 	};
@@ -198,7 +194,7 @@ pub fn try_build() -> Result<(), Box<dyn Error>> {
 }
 
 
-pub fn validate_sdk<P: AsRef<Path>>(root: P) -> Result<FwVersion, Box<dyn Error>> {
+pub fn validate_sdk<P: AsRef<Path>>(root: P) -> Result<FwVersion> {
 	println!(
 	         "cargo:rerun-if-changed={}",
 	         root.as_ref().join(PathBuf::from(".git/HEAD")).display()
@@ -207,7 +203,7 @@ pub fn validate_sdk<P: AsRef<Path>>(root: P) -> Result<FwVersion, Box<dyn Error>
 }
 
 // Unfortunately there are no VERSION file yet.
-pub fn _check_version_file<S: std::fmt::Display>(path: &Path, supported: VersionReq, name: S) -> Result<(), Box<dyn Error>> {
+pub fn _check_version_file<S: std::fmt::Display>(path: &Path, supported: VersionReq, name: S) -> Result {
 	let version = std::fs::read_to_string(path)?;
 	crate::check_version(&version, supported, name);
 	Ok(())
@@ -216,12 +212,12 @@ pub fn _check_version_file<S: std::fmt::Display>(path: &Path, supported: Version
 
 /// (tags, commit)
 type FwVersion = (Vec<String>, Option<String>);
-pub fn check_version_git<S: std::fmt::Display>(root: &Path, supported: VersionReq, name: S) -> Result<FwVersion, Box<dyn Error>> {
+pub fn check_version_git<S: std::fmt::Display>(root: &Path, supported: VersionReq, name: S) -> Result<FwVersion> {
 	let root = PathBuf::from(root);
 	let repo = rustygit::Repository::new(&root);
 	let tags = repo.cmd_out(["tag", "--points-at", "HEAD"])?;
 	let commit = repo.get_hash(false).ok();
-	let version = tags.iter().filter_map(|t| semver::Version::parse(&t).ok()).next();
+	let version = tags.iter().filter_map(|t| semver::Version::parse(t).ok()).next();
 
 	if let Some(version) = version {
 		println!("Flipper SDK version determined from git tag: {version:}");
@@ -236,7 +232,7 @@ pub fn check_version_git<S: std::fmt::Display>(root: &Path, supported: VersionRe
 }
 
 
-fn get_extra_headers(symbols: &[api_table::ApiTableRow<String>]) -> Result<PathBuf, Box<dyn Error>> {
+fn get_extra_headers(symbols: &[api_table::ApiTableRow<String>]) -> Result<PathBuf> {
 	let outdir = PathBuf::from(env::var("OUT_DIR")?).join("extras");
 	std::fs::create_dir_all(&outdir)?;
 
@@ -263,7 +259,7 @@ fn get_extra_headers(symbols: &[api_table::ApiTableRow<String>]) -> Result<PathB
 
 /// Build list of excluded files such as generated by this crate that cargo do not need to watch.
 /// If path points to directory, files in it will be in the result list.
-pub fn exclusions<I: IntoIterator<Item = P>, P: AsRef<Path>>(paths: I) -> Result<Vec<PathBuf>, Box<dyn Error>> {
+pub fn exclusions<I: IntoIterator<Item = P>, P: AsRef<Path>>(paths: I) -> Result<Vec<PathBuf>> {
 	let res = paths.into_iter()
 	               .flat_map(|p| {
 		               let def = vec![p.as_ref().to_owned()].into_iter();
@@ -276,13 +272,12 @@ pub fn exclusions<I: IntoIterator<Item = P>, P: AsRef<Path>>(paths: I) -> Result
 					                                                                    .extension()
 					                                                                    .unwrap_or_default()
 					                                                                    .to_str()
-					                                                                    .unwrap_or_default()
-					                                                                    .to_owned() ==
+					                                                                    .unwrap_or_default() ==
 					                                                               "h"
 				                                                               })
 			                                                           });
 			               if let Some(res) = res {
-				               res.map(|entry| entry.path().to_owned()).collect::<Vec<_>>().into_iter()
+				               res.map(|entry| entry.path()).collect::<Vec<_>>().into_iter()
 			               } else {
 				               def
 			               }
@@ -326,17 +321,16 @@ impl bindgen::callbacks::ParseCallbacks for DeriveCallbacks<PathBuf> {
 }
 
 
-fn from_source<P: AsRef<Path>, Builder: FnOnce() -> bindgen::Builder>(
-	builder: Builder,
-	root: P,
-	symbols_header: P,
-	extra_include: Option<P>)
-	-> Result<(bindgen::Builder, Option<PathBuf>), Box<dyn Error>> {
+fn from_source<P: AsRef<Path>, Builder: FnOnce() -> bindgen::Builder>(builder: Builder,
+                                                                      root: P,
+                                                                      symbols_header: P,
+                                                                      extra_include: Option<P>)
+                                                                      -> Result<(bindgen::Builder, Option<PathBuf>)> {
 	let root = root.as_ref();
 	let symbols_header = symbols_header.as_ref();
 	let mut builder = builder();
 
-	if try_exists(&symbols_header)? {
+	if try_exists(symbols_header)? {
 		builder = builder.header(format!("{}", symbols_header.display()))
 		                 .clang_args(&["--include-directory", &root.display().to_string()])
 		                 .clang_arg(format!("-I{}", &PathBuf::from("furi").display()))
@@ -348,9 +342,9 @@ fn from_source<P: AsRef<Path>, Builder: FnOnce() -> bindgen::Builder>(
 		                 .clang_arg(format!("-I{}", &PathBuf::from("firmware/targets/furi_hal_include").display()))
 		                 .clang_arg(format!("-I{}", &PathBuf::from("applications/services").display()))
 		                 .clang_arg(format!("-I{}", &PathBuf::from("applications/main").display()))
-		                 .clang_arg(format!("-DSTM32WB"))
-		                 .clang_arg(format!("-DSTM32WB55xx"))
-		                 .clang_arg(format!("-DUSE_FULL_LL_DRIVER"))
+		                 .clang_arg("-DSTM32WB")
+		                 .clang_arg("-DSTM32WB55xx")
+		                 .clang_arg("-DUSE_FULL_LL_DRIVER")
 		                 .clang_args(&["-x", "c"])
 		                 .clang_arg("-ferror-limit=1000");
 
@@ -369,7 +363,7 @@ fn from_source<P: AsRef<Path>, Builder: FnOnce() -> bindgen::Builder>(
 			                                                                    .to_str()
 			                                                                    .unwrap_or_default()
 			                                                                    .to_owned();
-			                                                !filename.starts_with(".") &&
+			                                                !filename.starts_with('.') &&
 			                                                !filename.to_uppercase().starts_with("STM32") &&
 			                                                !filename.to_uppercase().starts_with("FREERTOS")
 		                                                });
@@ -408,21 +402,19 @@ fn from_source<P: AsRef<Path>, Builder: FnOnce() -> bindgen::Builder>(
 }
 
 
-fn from_build<P: AsRef<Path>, Builder: FnOnce() -> bindgen::Builder>(
-	_builder: Builder,
-	_root: P,
-	_symbols_header: P,
-	_extra_include: Option<P>)
-	-> Result<(bindgen::Builder, Option<PathBuf>), Box<dyn Error>> {
+fn from_build<P: AsRef<Path>, Builder: FnOnce() -> bindgen::Builder>(_builder: Builder,
+                                                                     _root: P,
+                                                                     _symbols_header: P,
+                                                                     _extra_include: Option<P>)
+                                                                     -> Result<(bindgen::Builder, Option<PathBuf>)> {
 	Err(std::io::Error::other("Not implemented yet").into())
 }
 
 
-fn from_sdk_tree<P: AsRef<Path>, Builder: FnOnce() -> bindgen::Builder>(
-	builder: Builder,
-	root: P,
-	debug: bool)
-	-> Result<(bindgen::Builder, Option<PathBuf>), Box<dyn Error>> {
+fn from_sdk_tree<P: AsRef<Path>, Builder: FnOnce() -> bindgen::Builder>(builder: Builder,
+                                                                        root: P,
+                                                                        debug: bool)
+                                                                        -> Result<(bindgen::Builder, Option<PathBuf>)> {
 	let dirname = if debug { "f7-firmware-D" } else { "f7-firmware-C" };
 	let sdk = root.as_ref().join(PathBuf::from(format!("build/{dirname}/sdk/")));
 	let opts = std::fs::read_to_string(sdk.join("sdk.opts"))?;
@@ -436,7 +428,7 @@ fn from_sdk_tree<P: AsRef<Path>, Builder: FnOnce() -> bindgen::Builder>(
 
 	let mut builder = builder();
 	for path in headers {
-		println!("+ {}", path.display().to_string());
+		println!("+ {}", path.display());
 		builder = builder.header(path.display().to_string());
 	}
 	builder = builder.blocklist_file("portmacro.h")

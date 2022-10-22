@@ -514,28 +514,28 @@ jobs:
         uses: boozook/has-changed-path@master
         with:
           paths: .github/
-          commits: ${{ github.event.pull_request.commits || 1 }}
+          commits: ${{ github.event.pull_request.commits == 1 && ' ' || 1 }}
 
       - id: examples
         name: examples
         uses: boozook/has-changed-path@master
         with:
           paths: examples/**/*
-          commits: ${{ github.event.pull_request.commits || 1 }}
+          commits: ${{ github.event.pull_request.commits == 1 && ' ' || 1 }}
 
       - id: crates-examples
         name: crates-examples
         uses: boozook/has-changed-path@master
         with:
           paths: examples/*.rs
-          commits: ${{ github.event.pull_request.commits || 1 }}
+          commits: ${{ github.event.pull_request.commits == 1 && ' ' || 1 }}
 
       - id: build-support
         name: build-support
         uses: boozook/has-changed-path@master
         with:
           paths: build/
-          commits: ${{ github.event.pull_request.commits || 1 }}
+          commits: ${{ github.event.pull_request.commits == 1 && ' ' || 1 }}
 
       - id: fam-build
         name: fam-build
@@ -543,7 +543,7 @@ jobs:
         if: steps.build-support.outputs.changed == 'true'
         with:
           paths: build/fam-build
-          commits: ${{ github.event.pull_request.commits || 1 }}
+          commits: ${{ github.event.pull_request.commits == 1 && ' ' || 1 }}
 
       - id: fap-build
         name: fap-build
@@ -551,7 +551,7 @@ jobs:
         if: steps.build-support.outputs.changed == 'true'
         with:
           paths: build/fap-build
-          commits: ${{ github.event.pull_request.commits || 1 }}
+          commits: ${{ github.event.pull_request.commits == 1 && ' ' || 1 }}
 
       - id: proc-macro
         name: proc-macro
@@ -559,7 +559,7 @@ jobs:
         if: steps.build-support.outputs.changed == 'true'
         with:
           paths: build/proc-macro
-          commits: ${{ github.event.pull_request.commits || 1 }}
+          commits: ${{ github.event.pull_request.commits == 1 && ' ' || 1 }}
 
       - id: common
         name: common
@@ -567,42 +567,42 @@ jobs:
         if: steps.build-support.outputs.changed == 'true'
         with:
           paths: build/common
-          commits: ${{ github.event.pull_request.commits || 1 }}
+          commits: ${{ github.event.pull_request.commits == 1 && ' ' || 1 }}
 
       - id: fam
         name: fam
         uses: boozook/has-changed-path@master
         with:
           paths: format/fam
-          commits: ${{ github.event.pull_request.commits || 1 }}
+          commits: ${{ github.event.pull_request.commits == 1 && ' ' || 1 }}
 
       - id: flipper0
         name: flipper0
         uses: boozook/has-changed-path@master
         with:
           paths: flipper/
-          commits: ${{ github.event.pull_request.commits || 1 }}
+          commits: ${{ github.event.pull_request.commits == 1 && ' ' || 1 }}
 
       - id: flipper0-sys
         name: flipper0-sys
         uses: boozook/has-changed-path@master
         with:
           paths: src/ Cargo.toml
-          commits: ${{ github.event.pull_request.commits || 1 }}
+          commits: ${{ github.event.pull_request.commits == 1 && ' ' || 1 }}
 
       - id: flipper0-sys-build
         name: flipper0-sys-build
         uses: boozook/has-changed-path@master
         with:
           paths: src/build/
-          commits: ${{ github.event.pull_request.commits || 1 }}
+          commits: ${{ github.event.pull_request.commits == 1 && ' ' || 1 }}
 
       - id: gen
         name: gen
         uses: boozook/has-changed-path@master
         with:
           paths: gen/
-          commits: ${{ github.event.pull_request.commits || 1 }}
+          commits: ${{ github.event.pull_request.commits == 1 && ' ' || 1 }}
 
       - id: gen-api-ver
         name: gen-api-ver
@@ -610,14 +610,14 @@ jobs:
         if: steps.gen.outputs.changed == 'true'
         with:
           paths: gen/API-VERSION
-          commits: ${{ github.event.pull_request.commits || 1 }}
+          commits: ${{ github.event.pull_request.commits == 1 && ' ' || 1 }}
 
       - id: any-src-rs
         name: any-src-rs
         uses: boozook/has-changed-path@master
         with:
           paths: "**/*.rs"
-          commits: ${{ github.event.pull_request.commits || 1 }}
+          commits: ${{ github.event.pull_request.commits == 1 && ' ' || 1 }}
 
       - id: gen-api-ver-file
         name: gen-api-ver-file

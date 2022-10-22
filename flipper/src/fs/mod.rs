@@ -27,7 +27,7 @@ pub struct Storage<T: Record = record::Storage>(NonNull<ffi::Storage>, record::C
 
 
 impl Storage<record::Storage> {
-	pub fn default() -> Result<Self, NullPointerError> { Self::open(record::Storage) }
+	pub fn open_default() -> Result<Self, NullPointerError> { Self::open(record::Storage) }
 }
 
 
@@ -292,7 +292,7 @@ impl MetadataOwned {
 		self.0.flags & FSF_DIRECTORY != 0
 	}
 
-	pub fn borrow<'a>(&'a self) -> Metadata<'a> { Metadata(&self.0) }
+	pub fn borrow(&self) -> Metadata { Metadata(&self.0) }
 }
 
 impl Metadata<'_> {
