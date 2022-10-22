@@ -289,7 +289,6 @@ jobs:
           ./fbt${{ env.FBT_SHELL_EXT }} fap_${{ matrix.crate.name }}
           # COMPACT=${{ matrix.profile && 1 || 0 }} DEBUG=${{ matrix.profile && 0 || 1 }}
 
-  # tested, ok
   build-crates-examples:
     name: Build E ${{ matrix.profile && 'R' || 'D' }} (${{ matrix.os.short }})
 
@@ -346,7 +345,6 @@ jobs:
       - name: Check
         run: cargo fmt --all -- --check
 
-  # tested, ok
   clippy:
     name: Clippy [${{ matrix.rev }}]
 
@@ -478,87 +476,124 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          fetch-depth: ${{ github.event.pull_request.commits || 1 }}
+          fetch-depth: ${{ github.event.pull_request.commits || 10 }}
 
-      # echo "value=$(git diff --quiet HEAD~${{ github.event.pull_request.commits || 1 }} HEAD -- path/here || echo $?)
-
-      # mb use YassinEldeeb/has-changed-path?
       - id: ci
-        uses: marceloprado/has-changed-path@v1
+        name: ci
+        uses: boozook/has-changed-path@master
         with:
           paths: .github/
+          commits: "${{ github.event.pull_request.commits || '' }}"
 
       - id: examples
-        uses: marceloprado/has-changed-path@v1
+        name: examples
+        uses: boozook/has-changed-path@master
         with:
-          paths: examples/
+          paths: examples/**/*
+          commits: "${{ github.event.pull_request.commits || '' }}"
 
       - id: crates-examples
-        uses: marceloprado/has-changed-path@v1
-        if: steps.examples.outputs.changed == 'true'
+        name: crates-examples
+        uses: boozook/has-changed-path@master
         with:
           paths: examples/*.rs
+          commits: "${{ github.event.pull_request.commits || '' }}"
 
       - id: build-support
-        uses: marceloprado/has-changed-path@v1
+        name: build-support
+        uses: boozook/has-changed-path@master
         with:
           paths: build/
+          commits: "${{ github.event.pull_request.commits || '' }}"
 
       - id: fam-build
-        uses: marceloprado/has-changed-path@v1
+        name: fam-build
+        uses: boozook/has-changed-path@master
         if: steps.build-support.outputs.changed == 'true'
         with:
           paths: build/fam-build
+          commits: "${{ github.event.pull_request.commits || '' }}"
 
       - id: fap-build
-        uses: marceloprado/has-changed-path@v1
+        name: fap-build
+        uses: boozook/has-changed-path@master
         if: steps.build-support.outputs.changed == 'true'
         with:
           paths: build/fap-build
+          commits: "${{ github.event.pull_request.commits || '' }}"
 
       - id: proc-macro
-        uses: marceloprado/has-changed-path@v1
+        name: proc-macro
+        uses: boozook/has-changed-path@master
         if: steps.build-support.outputs.changed == 'true'
-        with: { paths: build/proc-macro }
+        with:
+          paths: build/proc-macro
+          commits: "${{ github.event.pull_request.commits || '' }}"
 
       - id: common
-        uses: marceloprado/has-changed-path@v1
+        name: common
+        uses: boozook/has-changed-path@master
         if: steps.build-support.outputs.changed == 'true'
-        with: { paths: build/common }
+        with:
+          paths: build/common
+          commits: "${{ github.event.pull_request.commits || '' }}"
 
       - id: fam
-        uses: marceloprado/has-changed-path@v1
-        with: { paths: format/fam }
+        name: fam
+        uses: boozook/has-changed-path@master
+        with:
+          paths: format/fam
+          commits: "${{ github.event.pull_request.commits || '' }}"
 
       - id: flipper0
-        uses: marceloprado/has-changed-path@v1
-        with: { paths: flipper/ }
+        name: flipper0
+        uses: boozook/has-changed-path@master
+        with:
+          paths: flipper/
+          commits: "${{ github.event.pull_request.commits || '' }}"
 
       - id: flipper0-sys
-        uses: marceloprado/has-changed-path@v1
-        with: { paths: src/ Cargo.toml }
+        name: flipper0-sys
+        uses: boozook/has-changed-path@master
+        with:
+          paths: src/ Cargo.toml
+          commits: "${{ github.event.pull_request.commits || '' }}"
 
       - id: flipper0-sys-build
-        uses: marceloprado/has-changed-path@v1
-        with: { paths: src/build/ }
+        name: flipper0-sys-build
+        uses: boozook/has-changed-path@master
+        with:
+          paths: src/build/
+          commits: "${{ github.event.pull_request.commits || '' }}"
 
       - id: gen
-        uses: marceloprado/has-changed-path@v1
-        with: { paths: gen/ }
+        name: gen
+        uses: boozook/has-changed-path@master
+        with:
+          paths: gen/
+          commits: "${{ github.event.pull_request.commits || '' }}"
 
       - id: gen-api-ver
-        uses: marceloprado/has-changed-path@v1
+        name: gen-api-ver
+        uses: boozook/has-changed-path@master
         if: steps.gen.outputs.changed == 'true'
-        with: { paths: gen/API-VERSION }
+        with:
+          paths: gen/API-VERSION
+          commits: "${{ github.event.pull_request.commits || '' }}"
 
       - id: any-src-rs
-        uses: marceloprado/has-changed-path@v1
-        with: { paths: "**/*.rs" }
+        name: any-src-rs
+        uses: boozook/has-changed-path@master
+        with:
+          paths: "**/*.rs"
+          commits: "${{ github.event.pull_request.commits || '' }}"
 
       - id: gen-api-ver-file
+        name: gen-api-ver-file
         run: echo "value=$(cat gen/API-VERSION || '')" >> $GITHUB_OUTPUT
 
       - id: gen-sdk-ver-file
+        name: gen-sdk-ver-file
         run: echo "value=$(cat gen/SDK-VERSION || '')" >> $GITHUB_OUTPUT
 
     outputs:
@@ -569,11 +604,9 @@ jobs:
         ~/.cargo/git/db/
         target/
       # minimal supported version:
-      # TODO: read from file:
-      def-sdk-ver: 0.69.0
-      # TODO: test this:
-      # def-sdk-ver: ${{ steps.gen-sdk-ver-file.outputs.value || '0.69.0' }}
+      def-sdk-ver: ${{ steps.gen-sdk-ver-file.outputs.value || '0.69.0' }}
       def-api-ver: ${{ steps.gen-api-ver-file.outputs.value || '2.2' }}
+      # changes:
       mod-fam: ${{ steps.fam.outputs.changed == 'true' || '' }}
       mod-flipper0-build-common: ${{ steps.common.outputs.changed == 'true' || '' }}
       mod-flipper0-fam-build: ${{ steps.fam-build.outputs.changed == 'true' || '' }}
@@ -665,19 +698,19 @@ jobs:
         || ''
         }}
 
-# # only for debug purposes:
-# cfg-view:
-#   name: 🛠 View
+  # # only for debug purposes:
+  # cfg-view:
+  #   name: 🛠 View
 
-#   needs: [cfg, test-conditions]
-#   runs-on: ubuntu-latest
+  #   needs: [cfg, test-conditions]
+  #   runs-on: ubuntu-latest
 
-#   steps:
-#     - name: Checkout repository
-#       uses: actions/checkout@v3
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v3
 
-#     - name: Config
-#       run: echo '${{ toJSON( needs.cfg.outputs ) }}'
+  #     - name: Config
+  #       run: echo '${{ toJSON( needs.cfg.outputs ) }}'
 
-#     - name: Conditions
-#       run: echo '${{ toJSON( needs.test-conditions.outputs ) }}'
+  #     - name: Conditions
+  #       run: echo '${{ toJSON( needs.test-conditions.outputs ) }}'
