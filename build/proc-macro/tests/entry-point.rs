@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-
+#![allow(clippy::missing_safety_doc)]
 #[macro_use]
 extern crate flipper0_macro;
 
@@ -17,7 +17,6 @@ fn exists() {
 	let _ = &ret_result::ret_result;
 	let _ = &ret_result_unsafe::ret_result_unsafe;
 	let _ = &input_into::input_into;
-	assert!(true)
 }
 
 #[test]

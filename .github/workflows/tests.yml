@@ -423,6 +423,28 @@ jobs:
       - name: Install Jset
         run: which jset || cargo install jset
 
+      # Prepare
+      - name: Read Clippy Allow list
+        id: clippy-allow
+        uses: jbutcher5/read-yaml@1.6
+        with:
+          file: ${{ github.workspace }}/.github/clippy-allow.yml
+          key-path: '["allow"]'
+      - name: Read Clippy Warn list
+        id: clippy-warn
+        uses: jbutcher5/read-yaml@1.6
+        with:
+          file: ${{ github.workspace }}/.github/clippy-allow.yml
+          key-path: '["warn"]'
+
+      - name: Prepare Clippy Allow list
+        id: clippy-allow-args
+        run: echo "value=${{ format('-A clippy::{0}', join(fromJSON(steps.clippy-allow.outputs.data), ' -A clippy::')) }}" >> $GITHUB_OUTPUT
+
+      - name: Prepare Clippy Warn list
+        id: clippy-warn-args
+        run: echo "value=${{ format('-W clippy::{0}', join(fromJSON(steps.clippy-warn.outputs.data), ' -W clippy::')) }}" >> $GITHUB_OUTPUT
+
       # Build
       - name: Build Support Crates
         run: cargo clippy --message-format=json
@@ -431,16 +453,22 @@ jobs:
           -p=flipper0-build-cfg
           -p=flipper0-fam-build
           -p=flipper0-fap-build
-          -p=flipper0-macro |
-          clippy-sarif | tee support-crates-clippy.sarif | sarif-fmt
+          -p=flipper0-macro
+          --
+          ${{ steps.clippy-allow-args.outputs.value }}
+          ${{ steps.clippy-warn-args.outputs.value }} |
+          clippy-sarif | tee clippy-support-crates.sarif | sarif-fmt
         continue-on-error: true
 
       - name: Build Main Crates
         run: cargo clippy --message-format=json
           --all-features
           -p=flipper0
-          -p=flipper0-sys |
-          clippy-sarif | tee main-crates-clippy.sarif | sarif-fmt
+          -p=flipper0-sys
+          --
+          ${{ steps.clippy-allow-args.outputs.value }}
+          ${{ steps.clippy-warn-args.outputs.value }} |
+          clippy-sarif | tee clippy-main-crates.sarif | sarif-fmt
         continue-on-error: true
 
       - name: Build Example Crates
@@ -450,18 +478,21 @@ jobs:
           -p=fap-manifest-toml-example
           -p=fap-build-example
           -p=main-macro-example
-          -p=fs-example |
-          clippy-sarif | tee example-crates-clippy | sarif-fmt
+          -p=fs-example
+          --
+          ${{ steps.clippy-allow-args.outputs.value }}
+          ${{ steps.clippy-warn-args.outputs.value }} |
+          clippy-sarif | tee clippy-example-crates.sarif | sarif-fmt
         continue-on-error: true
 
       # Results
       - name: Merge Results
-        run: jset union ./*.sarif > ./all-clippy.sarif
+        run: jset union ./*.sarif > ./clippy-all.sarif
 
       - name: Upload
         uses: github/codeql-action/upload-sarif@v2
         with:
-          sarif_file: all-clippy.sarif
+          sarif_file: clippy-all.sarif
           wait-for-processing: true
 
       - name: Clean Results
@@ -483,24 +514,28 @@ jobs:
         uses: boozook/has-changed-path@master
         with:
           paths: .github/
+          commits: ${{ github.event.pull_request.commits || 1 }}
 
       - id: examples
         name: examples
         uses: boozook/has-changed-path@master
         with:
           paths: examples/**/*
+          commits: ${{ github.event.pull_request.commits || 1 }}
 
       - id: crates-examples
         name: crates-examples
         uses: boozook/has-changed-path@master
         with:
           paths: examples/*.rs
+          commits: ${{ github.event.pull_request.commits || 1 }}
 
       - id: build-support
         name: build-support
         uses: boozook/has-changed-path@master
         with:
           paths: build/
+          commits: ${{ github.event.pull_request.commits || 1 }}
 
       - id: fam-build
         name: fam-build
@@ -508,6 +543,7 @@ jobs:
         if: steps.build-support.outputs.changed == 'true'
         with:
           paths: build/fam-build
+          commits: ${{ github.event.pull_request.commits || 1 }}
 
       - id: fap-build
         name: fap-build
@@ -515,6 +551,7 @@ jobs:
         if: steps.build-support.outputs.changed == 'true'
         with:
           paths: build/fap-build
+          commits: ${{ github.event.pull_request.commits || 1 }}
 
       - id: proc-macro
         name: proc-macro
@@ -522,6 +559,7 @@ jobs:
         if: steps.build-support.outputs.changed == 'true'
         with:
           paths: build/proc-macro
+          commits: ${{ github.event.pull_request.commits || 1 }}
 
       - id: common
         name: common
@@ -529,36 +567,42 @@ jobs:
         if: steps.build-support.outputs.changed == 'true'
         with:
           paths: build/common
+          commits: ${{ github.event.pull_request.commits || 1 }}
 
       - id: fam
         name: fam
         uses: boozook/has-changed-path@master
         with:
           paths: format/fam
+          commits: ${{ github.event.pull_request.commits || 1 }}
 
       - id: flipper0
         name: flipper0
         uses: boozook/has-changed-path@master
         with:
           paths: flipper/
+          commits: ${{ github.event.pull_request.commits || 1 }}
 
       - id: flipper0-sys
         name: flipper0-sys
         uses: boozook/has-changed-path@master
         with:
           paths: src/ Cargo.toml
+          commits: ${{ github.event.pull_request.commits || 1 }}
 
       - id: flipper0-sys-build
         name: flipper0-sys-build
         uses: boozook/has-changed-path@master
         with:
           paths: src/build/
+          commits: ${{ github.event.pull_request.commits || 1 }}
 
       - id: gen
         name: gen
         uses: boozook/has-changed-path@master
         with:
           paths: gen/
+          commits: ${{ github.event.pull_request.commits || 1 }}
 
       - id: gen-api-ver
         name: gen-api-ver
@@ -566,12 +610,14 @@ jobs:
         if: steps.gen.outputs.changed == 'true'
         with:
           paths: gen/API-VERSION
+          commits: ${{ github.event.pull_request.commits || 1 }}
 
       - id: any-src-rs
         name: any-src-rs
         uses: boozook/has-changed-path@master
         with:
           paths: "**/*.rs"
+          commits: ${{ github.event.pull_request.commits || 1 }}
 
       - id: gen-api-ver-file
         name: gen-api-ver-file
