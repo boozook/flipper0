@@ -1,0 +1,7 @@
+allow:
+  - clone_on_copy
+  - redundant_static_lifetimes
+  - tabs_in_doc_comments
+  - type_complexity
+warn:
+  - redundant_allocation

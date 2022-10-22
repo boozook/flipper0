@@ -2,7 +2,7 @@ name: Tests
 on:
   pull_request:
   push:
-    branches: [master]
+    branches: [master, "**"]
 
 defaults:
   run:
@@ -423,6 +423,27 @@ jobs:
       - name: Install Jset
         run: which jset || cargo install jset
 
+      # Prepare
+      - name: Read Clippy Allow list
+        id: clippy-allow
+        uses: jbutcher5/read-yaml@1.6
+        with:
+          file: ${{ github.workspace }}/.github/clippy-allow.yml
+          key-path: '["allow"]'
+      - name: Read Clippy Warn list
+        id: clippy-warn
+        uses: jbutcher5/read-yaml@1.6
+        with:
+          file: ${{ github.workspace }}/.github/clippy-allow.yml
+          key-path: '["warn"]'
+
+      - name: Prepare Clippy allow-list
+        id: clippy-allow-args
+        run: echo "allow=${{ steps.clippy-allow.outputs.data }}"
+      - name: Prepare Clippy allow-list
+        id: clippy-warn-args
+        run: echo "warn=${{ steps.clippy-warn.outputs.data }}"
+
       # Build
       - name: Build Support Crates
         run: cargo clippy --message-format=json
@@ -432,7 +453,7 @@ jobs:
           -p=flipper0-fam-build
           -p=flipper0-fap-build
           -p=flipper0-macro |
-          clippy-sarif | tee support-crates-clippy.sarif | sarif-fmt
+          clippy-sarif | tee clippy-support-crates.sarif | sarif-fmt
         continue-on-error: true
 
       - name: Build Main Crates
@@ -440,7 +461,7 @@ jobs:
           --all-features
           -p=flipper0
           -p=flipper0-sys |
-          clippy-sarif | tee main-crates-clippy.sarif | sarif-fmt
+          clippy-sarif | tee clippy-main-crates.sarif | sarif-fmt
         continue-on-error: true
 
       - name: Build Example Crates
@@ -451,12 +472,12 @@ jobs:
           -p=fap-build-example
           -p=main-macro-example
           -p=fs-example |
-          clippy-sarif | tee example-crates-clippy | sarif-fmt
+          clippy-sarif | tee clippy-example-crates.sarif | sarif-fmt
         continue-on-error: true
 
       # Results
       - name: Merge Results
-        run: jset union ./*.sarif > ./all-clippy.sarif
+        run: jset union ./*.sarif > ./clippy-all.sarif
 
       - name: Upload
         uses: github/codeql-action/upload-sarif@v2
