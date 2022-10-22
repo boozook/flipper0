@@ -630,7 +630,7 @@ jobs:
       - id: master-push
         name: is push to master
         run: echo "value=${{
-          (github.event == 'push' && github.github.ref_name == 'master') ||
+          (github.event_name == 'push' && github.ref_name == 'master') ||
           (github.event_name == 'pull_request' && github.event.pull_request.merged == true) || '' }}" >> $GITHUB_OUTPUT
 
     outputs:
