@@ -166,7 +166,7 @@ impl Default for FapMetadata {
 			                                          if let Some(v) = patch {
 				                                          result.push(v);
 			                                          }
-			                                          if let Some(pre) = pre.filter(|s| s.trim().len() != 0) {
+			                                          if let Some(pre) = pre.filter(|s| !s.trim().is_empty()) {
 				                                          println!("cargo:warning=Last component of the crate version will be ignored: {pre}");
 			                                          }
 			                                          result

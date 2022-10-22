@@ -9,7 +9,7 @@ fn doc_sdk_metadata_row(rev: Option<impl AsRef<str>>, tags: &[impl AsRef<str>], 
 		parts.push(format!(
 			"git {plural}: {tags}",
 			plural = if tags.len() > 1 { "tags" } else { "tag" },
-			tags = tags.into_iter().map(|s| s.as_ref()).collect::<Vec<_>>().join(", ")
+			tags = tags.iter().map(|s| s.as_ref()).collect::<Vec<_>>().join(", ")
 		));
 	}
 

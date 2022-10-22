@@ -1,4 +1,5 @@
 #![feature(box_syntax)]
+#![allow(clippy::large_enum_variant)]
 /*! Flipper Application Manifest struct
 	 and (de)serialization methods and for export to fam `App` struct.
 
@@ -143,8 +144,8 @@ impl Manifest {
 	pub fn try_to_string(&self) -> Result<String, RenderError> {
 		match self {
 			#[cfg(feature = "toml")]
-			Manifest::Toml(toml) => render_raw_toml(&toml),
-			Manifest::Json(json) => render_raw_json(&json),
+			Manifest::Toml(toml) => render_raw_toml(toml),
+			Manifest::Json(json) => render_raw_json(json),
 			Manifest::Struct { name,
 			                   appid,
 			                   apptype,
@@ -282,13 +283,10 @@ impl Manifest {
 		match self {
 			Self::Struct { fap_version, .. } => fap_version.to_owned(),
 			Self::Json(value) => {
-				value.as_object()
-				     .map(|o| {
-					     o.get("fap_version")
-					      .map(|v| serde_json::from_value::<(String, String)>(v.to_owned()).ok())
-					      .flatten()
-				     })
-				     .flatten()
+				value.as_object().and_then(|o| {
+					                 o.get("fap_version")
+					                  .and_then(|v| serde_json::from_value::<(String, String)>(v.to_owned()).ok())
+				                 })
 			},
 			#[cfg(feature = "toml")]
 			Self::Toml(value) => {

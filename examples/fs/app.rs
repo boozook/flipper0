@@ -20,7 +20,7 @@ type Result<T = (), E = Box<dyn core::error::Error>> = core::result::Result<T, E
 #[main]
 pub unsafe fn main() -> Result {
 	// Create, open FS interface:
-	let storage = Storage::default()?;
+	let storage = Storage::open_default()?;
 
 	// Get info for external flash (SD):
 	let info = storage.info(Path::from_ptr(flipper0::ffi::STORAGE_EXT_PATH_PREFIX.as_ptr() as _));

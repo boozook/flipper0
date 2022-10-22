@@ -17,7 +17,10 @@ mod api_table;
 mod source;
 
 
-fn main() -> Result<(), Box<dyn Error>> {
+type Result<T = (), E = Box<dyn Error>> = std::result::Result<T, E>;
+
+
+fn main() -> Result {
 	let cargo_profile = env::var("PROFILE").expect("PROFILE cargo env var");
 	let debug = cargo_profile.to_lowercase().eq("debug");
 	let output_filename = bindings_filename(debug);
@@ -30,7 +33,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 	if prebuild {
 		let root = env::var_os("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR cargo env var");
 		let path = PathBuf::from(&root).join("gen").join(output_filename);
-		println!("cargo:rustc-env={}={}", consts::env::BINDINGS_ENV, path.display().to_string());
+		println!("cargo:rustc-env={}={}", consts::env::BINDINGS_ENV, path.display());
 
 		let path = PathBuf::from(&root).join("gen").join("metadoc.txt");
 		let meta = std::fs::read_to_string(&path)?;
@@ -96,7 +99,7 @@ fn env_var_bool<K: AsRef<OsStr>>(key: K) -> bool {
 
 
 fn feature(feature: &str) -> bool {
-	let name = feature.to_uppercase().replace("-", "_");
+	let name = feature.to_uppercase().replace('-', "_");
 	env_var_bool(format!("CARGO_FEATURE_{name}"))
 }
 

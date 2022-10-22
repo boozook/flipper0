@@ -34,6 +34,6 @@ pub fn flipper_sdk_path() -> Result<PathBuf, Box<dyn Error>> {
 		         You can enable `prebuild` feature to use prebuilt bindings.",
 		         FLIPPER_SDK_PATH_ENV
 		);
-		Err(env::VarError::NotPresent.into()).into()
+		Err(env::VarError::NotPresent.into())
 	}
 }

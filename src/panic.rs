@@ -10,6 +10,7 @@ use core::str;
 /// and correct aborting instead of `furi_crash` usage
 /// that more correct to use aseptically for mem-related reasons.
 #[panic_handler]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe fn panic(panic_info: &PanicInfo<'_>) -> ! {
 	let thread_name = unsafe {
 		let thread_id = furi_thread_get_current_id();
