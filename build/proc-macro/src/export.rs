@@ -137,6 +137,7 @@ fn wrap_main_ret_result(mut f: ItemFn, ret: ResultTypeInfo) -> Result<WrapResult
 	let wrapper = quote_spanned! { f.span() =>
 		#[no_mangle]
 		pub #unsafety extern "C" fn #ident #input -> i32 {
+			#![allow(clippy::useless_conversion)]
 			#f
 			match #ident #call { #ok, #err, }
 		}
