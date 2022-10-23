@@ -10,7 +10,7 @@
 name: SDK
 on:
   schedule:
-    - cron: "0 0 * * 0,1,5"
+    - cron: "0 17 * * *"
 
 defaults:
   run:
