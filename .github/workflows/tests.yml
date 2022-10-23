@@ -3,6 +3,12 @@ on:
   pull_request:
   push:
     branches: [master]
+  workflow_call:
+    inputs:
+      rev:
+        description: Revision of SDK
+        required: true
+        type: string
 
 defaults:
   run:
@@ -627,9 +633,12 @@ jobs:
         name: gen-sdk-ver-file
         run: echo "value=$(cat gen/SDK-VERSION || '')" >> $GITHUB_OUTPUT
 
-      - id: master-push
-        name: is push to master
+        # Is it a push to master or a call from another workflow?
+        # For both of this options we should test all of things, anyway.
+      - id: anyway
+        name: is push to master or call
         run: echo "value=${{
+          inputs.rev ||
           (github.event_name == 'push' && github.ref_name == 'master') ||
           (github.event_name == 'pull_request' && github.event.pull_request.merged == true) || '' }}" >> $GITHUB_OUTPUT
 
@@ -641,25 +650,25 @@ jobs:
         ~/.cargo/git/db/
         target/
       # minimal supported version:
-      def-sdk-ver: ${{ steps.gen-sdk-ver-file.outputs.value || '0.69.0' }}
+      def-sdk-ver: ${{ inputs.rev || steps.gen-sdk-ver-file.outputs.value || '0.69.0' }}
       def-api-ver: ${{ steps.gen-api-ver-file.outputs.value || '2.2' }}
       # changes:
-      mod-fam: ${{ steps.fam.outputs.changed == 'true' || steps.master-push.outputs.value }}
-      mod-flipper0-build-common: ${{ steps.common.outputs.changed == 'true' || steps.master-push.outputs.value }}
-      mod-flipper0-fam-build: ${{ steps.fam-build.outputs.changed == 'true' || steps.master-push.outputs.value }}
-      mod-flipper0-fap-build: ${{ steps.fap-build.outputs.changed == 'true' || steps.master-push.outputs.value }}
-      mod-flipper0-macro: ${{ steps.proc-macro.outputs.changed == 'true' || steps.master-push.outputs.value }}
-      mod-flipper0-any: ${{ steps.flipper0-sys.outputs.changed == 'true' || steps.flipper0.outputs.changed == 'true' || steps.master-push.outputs.value }}
-      mod-flipper0-sys: ${{ steps.flipper0-sys.outputs.changed == 'true' || steps.master-push.outputs.value }}
-      mod-flipper0-sys-build: ${{ steps.flipper0-sys-build.outputs.changed == 'true' || steps.master-push.outputs.value }}
-      mod-flipper0: ${{ steps.flipper0.outputs.changed == 'true' || steps.master-push.outputs.value }}
-      mod-examples: ${{ steps.examples.outputs.changed == 'true' || steps.master-push.outputs.value }}
-      mod-crates-examples: ${{ steps.crates-examples.outputs.changed == 'true' || steps.master-push.outputs.value }}
+      mod-fam: ${{ steps.fam.outputs.changed == 'true' || steps.anyway.outputs.value }}
+      mod-flipper0-build-common: ${{ steps.common.outputs.changed == 'true' || steps.anyway.outputs.value }}
+      mod-flipper0-fam-build: ${{ steps.fam-build.outputs.changed == 'true' || steps.anyway.outputs.value }}
+      mod-flipper0-fap-build: ${{ steps.fap-build.outputs.changed == 'true' || steps.anyway.outputs.value }}
+      mod-flipper0-macro: ${{ steps.proc-macro.outputs.changed == 'true' || steps.anyway.outputs.value }}
+      mod-flipper0-any: ${{ steps.flipper0-sys.outputs.changed == 'true' || steps.flipper0.outputs.changed == 'true' || steps.anyway.outputs.value }}
+      mod-flipper0-sys: ${{ steps.flipper0-sys.outputs.changed == 'true' || steps.anyway.outputs.value }}
+      mod-flipper0-sys-build: ${{ steps.flipper0-sys-build.outputs.changed == 'true' || steps.anyway.outputs.value }}
+      mod-flipper0: ${{ steps.flipper0.outputs.changed == 'true' || steps.anyway.outputs.value }}
+      mod-examples: ${{ steps.examples.outputs.changed == 'true' || steps.anyway.outputs.value }}
+      mod-crates-examples: ${{ steps.crates-examples.outputs.changed == 'true' || steps.anyway.outputs.value }}
       mod-ci: ${{ steps.ci.outputs.changed == 'true' || '' }}
-      mod-build-support: ${{ steps.build-support.outputs.changed == 'true' || steps.master-push.outputs.value }}
-      mod-gen: ${{ steps.gen.outputs.changed == 'true' || steps.master-push.outputs.value }}
-      mod-api-ver: ${{ steps.gen-api-ver.outputs.changed == 'true' || steps.master-push.outputs.value }}
-      mod-any-src-rs: ${{ steps.any-src-rs.outputs.changed == 'true' || steps.master-push.outputs.value }}
+      mod-build-support: ${{ steps.build-support.outputs.changed == 'true' || steps.anyway.outputs.value }}
+      mod-gen: ${{ steps.gen.outputs.changed == 'true' || steps.anyway.outputs.value }}
+      mod-api-ver: ${{ steps.gen-api-ver.outputs.changed == 'true' || steps.anyway.outputs.value }}
+      mod-any-src-rs: ${{ steps.any-src-rs.outputs.changed == 'true' || steps.anyway.outputs.value }}
 
   test-conditions:
     name: 🛠 Conditional Decisions
