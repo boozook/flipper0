@@ -211,6 +211,7 @@ impl metadata::FapMetadata {
 	/// Links all assets such as icon.
 	///
 	/// Currently only icon.
+	///
 	pub fn canonicalize_assets<P: AsRef<Path>>(&mut self, root: P) -> Result {
 		let icon_override = if let Some(origin) = &self.icon {
 			let path = PathBuf::from(&origin);

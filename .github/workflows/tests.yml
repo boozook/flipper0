@@ -426,8 +426,7 @@ jobs:
       # Prepare
       - name: Read Clippy Allow list
         id: clippy-allow
-        # uses: jbutcher5/read-yaml@1.6
-        uses: boozook/read-yaml@main
+        uses: boozook/read-yaml@main # patched jbutcher5/read-yaml@1.6
         with:
           file: ${{ github.workspace }}/.github/clippy-allow.yml
           key-path: '["allow"]'
