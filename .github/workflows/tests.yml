@@ -105,8 +105,6 @@ jobs:
     name: Build bindings [${{ matrix.rev }}] ${{ matrix.profile && 'R' || 'D' }} (${{ matrix.os.short }})
 
     needs: cfg
-    # TODO: check API/SDK-VERSION file
-    # TODO: or need to test with release-candidate
     if: needs.cfg.outputs.mod-flipper0-sys-build
     runs-on: ${{ matrix.os.full }}
 
@@ -124,7 +122,6 @@ jobs:
           - thumbv7em-none-eabihf
         rev:
           - ${{ needs.cfg.outputs.def-sdk-ver }}
-          - release-candidate
 
     steps:
       - name: Checkout repository
@@ -232,7 +229,6 @@ jobs:
           - ""
         rev:
           - ${{ needs.cfg.outputs.def-sdk-ver }}
-          - release-candidate
 
     steps:
       - name: Checkout repository
