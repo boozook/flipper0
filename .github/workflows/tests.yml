@@ -9,6 +9,35 @@ on:
         description: Revision of SDK
         required: true
         type: string
+      continue-on-error:
+        required: false
+        default: false
+        type: boolean
+      # jobs:
+      prebuild:
+        required: false
+        default: true
+        type: boolean
+      source:
+        required: false
+        default: true
+        type: boolean
+      support-crates:
+        required: false
+        default: true
+        type: boolean
+      examples:
+        required: false
+        default: true
+        type: boolean
+      style:
+        required: false
+        default: true
+        type: boolean
+      clippy:
+        required: false
+        default: true
+        type: boolean
 
 defaults:
   run:
@@ -31,8 +60,9 @@ jobs:
     name: Test ${{ matrix.crate }} (${{ matrix.os.short }})
 
     needs: [cfg, test-conditions]
-    if: fromJSON(needs.test-conditions.outputs.support-crates)[0]
+    if: fromJSON(needs.test-conditions.outputs.support-crates)[0] && inputs.support-crates
     runs-on: ${{ matrix.os.full }}
+    continue-on-error: ${{ inputs.continue-on-error }}
 
     strategy:
       fail-fast: false
@@ -67,8 +97,9 @@ jobs:
     name: Build ${{ matrix.crate }} [prebuilt] ${{ matrix.profile && 'R' || 'D' }} (${{ matrix.os.short }})
 
     needs: [cfg, test-conditions]
-    if: fromJSON(needs.test-conditions.outputs.main-crates)[0]
+    if: fromJSON(needs.test-conditions.outputs.main-crates)[0] && inputs.prebuild
     runs-on: ${{ matrix.os.full }}
+    continue-on-error: ${{ inputs.continue-on-error }}
 
     strategy:
       fail-fast: true
@@ -105,8 +136,9 @@ jobs:
     name: Build bindings [${{ matrix.rev }}] ${{ matrix.profile && 'R' || 'D' }} (${{ matrix.os.short }})
 
     needs: cfg
-    if: needs.cfg.outputs.mod-flipper0-sys-build
+    if: needs.cfg.outputs.mod-flipper0-sys-build && inputs.source
     runs-on: ${{ matrix.os.full }}
+    continue-on-error: ${{ inputs.continue-on-error }}
 
     strategy:
       fail-fast: true
@@ -207,10 +239,12 @@ jobs:
     needs:
       - cfg
       - build-bindings-prebuilt
-    if: needs.cfg.outputs.mod-examples ||
+    if: inputs.examples && (
+      needs.cfg.outputs.mod-examples ||
       needs.cfg.outputs.mod-build-support ||
-      needs.cfg.outputs.mod-flipper0-any
+      needs.cfg.outputs.mod-flipper0-any )
     runs-on: ${{ matrix.os.full }}
+    continue-on-error: ${{ inputs.continue-on-error }}
 
     strategy:
       fail-fast: false
@@ -295,9 +329,11 @@ jobs:
     name: Build E ${{ matrix.profile && 'R' || 'D' }} (${{ matrix.os.short }})
 
     needs: [cfg, test-conditions]
-    if: needs.cfg.outputs.mod-crates-examples ||
-      needs.cfg.test-conditions.flipper0-sys
+    if: inputs.examples && (
+      needs.cfg.outputs.mod-crates-examples ||
+      needs.cfg.test-conditions.flipper0-sys )
     runs-on: ${{ matrix.os.full }}
+    continue-on-error: ${{ inputs.continue-on-error }}
 
     strategy:
       fail-fast: false
@@ -330,8 +366,9 @@ jobs:
     name: Style
 
     needs: cfg
-    if: needs.cfg.outputs.mod-any-src-rs
+    if: needs.cfg.outputs.mod-any-src-rs && inputs.style
     runs-on: ubuntu-latest
+    continue-on-error: ${{ inputs.continue-on-error }}
 
     steps:
       - name: Checkout repository
@@ -351,8 +388,9 @@ jobs:
     name: Clippy [${{ matrix.rev }}]
 
     needs: cfg
-    if: needs.cfg.outputs.mod-any-src-rs
+    if: needs.cfg.outputs.mod-any-src-rs && inputs.clippy
     runs-on: ubuntu-latest
+    continue-on-error: ${{ inputs.continue-on-error }}
 
     permissions:
       actions: read
@@ -504,6 +542,7 @@ jobs:
   cfg:
     name: 🛠 Config
     runs-on: ubuntu-latest
+    continue-on-error: ${{ inputs.continue-on-error }}
 
     steps:
       - name: Checkout repository
@@ -671,6 +710,7 @@ jobs:
 
     needs: cfg
     runs-on: ubuntu-latest
+    continue-on-error: ${{ inputs.continue-on-error }}
 
     steps:
       - name: Checkout repository

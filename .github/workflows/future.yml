@@ -22,12 +22,13 @@ env:
 
 jobs:
   tag:
+    name: Checkout
     if: github.ref_name == 'master'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
       matrix:
-        rev:
+        branch:
           - release
           - release-candidate
 
@@ -40,7 +41,7 @@ jobs:
         with:
           repository: flipperdevices/flipperzero-firmware
           path: ${{ env.FLIPPER_FW_SRC_PATH }}
-          ref: ${{ matrix.rev }}
+          ref: ${{ matrix.branch }}
           submodules: false
           clean: false
           fetch-depth: 1
@@ -50,6 +51,7 @@ jobs:
         run: |
           git fetch --tags --quiet
           # get latest tag for this head:
+          echo "$(git describe --tags --abbrev=0)"
           echo "tag=$(git describe --tags --abbrev=0)" >> $GITHUB_OUTPUT
 
           # get all tags starting from `commit-hash`:
@@ -68,43 +70,67 @@ jobs:
       # is current sdk version presents as tag on exactly this commit:
       - name: check current commit tags
         if: steps.sdk.outputs.tag
-        id: current
-        run: VALUE="$(
-          git show-ref --tags -d |
-          grep ^$(git rev-parse --short HEAD) |
-          sed -e 's,.* refs/tags/,,' -e 's/\^{}//' |
-          grep ^fw-${{ steps.sdk.outputs.tag }} || echo '')"
-          echo "exists=$VALUE" >> $GITHUB_OUTPUT
+        id: exists
+        run: |
+          VALUE="$(                                                 \
+          git show-ref --tags -d |                                  \
+          grep ^$(git rev-parse --short HEAD) |                     \
+          sed -e 's,.* refs/tags/,,' -e 's/\^{}//' |                \
+          grep '^fw-${{ steps.sdk.outputs.tag }}$' || echo '')"
+          echo "value=\"$VALUE\""
+          echo "value=$VALUE" >> $GITHUB_OUTPUT
+
+      - name: output [${{ steps.exists.outputs.value }}]
+        id: output
+        if: (!steps.exists.outputs.value)
+        run: |
+          echo 'out: ${{ matrix.branch }}=${{ steps.sdk.outputs.tag }}'
+          echo '${{ matrix.branch }}=${{ steps.sdk.outputs.tag }}' >> $GITHUB_OUTPUT
 
     outputs:
-      sdk: ${{ steps.sdk.outputs.tag }}
-      tag: fw-${{ steps.sdk.outputs.tag }}
-      continue: ${{ !steps.current.outputs.exists }}
+      r: ${{ steps.output.outputs.release }}
+      rc: ${{ steps.output.outputs.release-candidate }}
 
-  tests:
+  test-r:
+    name: Test [${{ needs.tag.outputs.r }}]
     needs: tag
-    if: needs.tag.outputs.continue
+    if: needs.tag.outputs.r
     uses: ./.github/workflows/tests.yml
     with:
-      rev: ${{ needs.tag.outputs.sdk }}
+      rev: ${{ needs.tag.outputs.r }}
+      source: true
+      examples: true
+      prebuild: false
+      support-crates: false
+      style: false
+      clippy: false
 
-  finally:
-    needs: [tag, tests]
-    runs-on: ubuntu-latest
+  test-rc:
+    name: Test [${{ needs.tag.outputs.rc }}]
+    needs: tag
+    if: needs.tag.outputs.rc
+    uses: ./.github/workflows/tests.yml
+    with:
+      rev: ${{ needs.tag.outputs.rc }}
+      source: true
+      examples: true
+      prebuild: false
+      support-crates: false
+      style: false
+      clippy: false
 
-    steps:
-      - name: checkout
-        uses: actions/checkout@v3
-
-      - name: setup git
-        run: |
-          git config user.name "GitHub Actions"
-          git config user.email "<>"
-
-      - name: push tag
-        run: |
-          TAG_DESCR="tested with fw ver ${{ needs.tag.outputs.sdk }} \
-            (https://github.com/flipperdevices/flipperzero-firmware/releases/tag/${{ needs.tag.outputs.sdk }})"
-          git tag -fa ${{ needs.tag.outputs.tag }} -m "$TAG_DESCR"
-          echo "Pushing tag ${{ needs.tag.outputs.tag }}"
-          git push --force origin refs/tags/${{ needs.tag.outputs.tag }}:refs/tags/${{ needs.tag.outputs.tag }}
+  set:
+    name: Tag
+    needs: [tag, test-r, test-rc]
+    if: always() && (needs.test-r.result == 'success' || needs.test-rc.result == 'success')
+    uses: ./.github/workflows/set-tag.yml
+    with:
+      # tags: ${{ toJSON(needs.tag.outputs.*) }}
+      tags: >-
+        [
+        ${{ needs.test-r.result == 'success' && format('"fw-{0}",', needs.tag.outputs.r) || '' }}
+        ${{ needs.test-rc.result == 'success' && format('"fw-{0}",', needs.tag.outputs.rc) || '' }}
+        ]
+      annotation: |
+        Tested with fw ver {0}
+        Link: https://github.com/flipperdevices/flipperzero-firmware/releases/tag/{0} .
