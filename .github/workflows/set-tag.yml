@@ -1,0 +1,42 @@
+name: SDK
+on:
+  workflow_call:
+    inputs:
+      tags:
+        description: Array of tags `[tag,..]`
+        required: true
+        type: string
+      annotation:
+        description: Tag annotation template where `{0}` replaces with a tag.
+        required: false
+        type: string
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  finally:
+    name: Tag
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        tag: ${{ fromJSON(inputs.tags).* }}
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.head_commit.id }}
+
+      - name: setup git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "<>"
+
+      - name: push tag
+        run: |
+          git tag -fa ${{ matrix.tag }} -m '${{ format(inputs.annotation || '', matrix.tag) }}'
+          echo "Pushing tag ${{ matrix.tag }}"
+          git push --force origin refs/tags/${{ matrix.tag }}:refs/tags/${{ matrix.tag }}
