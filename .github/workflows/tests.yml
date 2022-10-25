@@ -60,9 +60,9 @@ jobs:
     name: Test ${{ matrix.crate }} (${{ matrix.os.short }})
 
     needs: [cfg, test-conditions]
-    if: fromJSON(needs.test-conditions.outputs.support-crates)[0] && inputs.support-crates
+    if: fromJSON(needs.test-conditions.outputs.support-crates)[0] || inputs.support-crates
     runs-on: ${{ matrix.os.full }}
-    continue-on-error: ${{ inputs.continue-on-error }}
+    continue-on-error: ${{ inputs.continue-on-error || false }}
 
     strategy:
       fail-fast: false
@@ -97,9 +97,9 @@ jobs:
     name: Build ${{ matrix.crate }} [prebuilt] ${{ matrix.profile && 'R' || 'D' }} (${{ matrix.os.short }})
 
     needs: [cfg, test-conditions]
-    if: fromJSON(needs.test-conditions.outputs.main-crates)[0] && inputs.prebuild
+    if: fromJSON(needs.test-conditions.outputs.main-crates)[0] || inputs.prebuild
     runs-on: ${{ matrix.os.full }}
-    continue-on-error: ${{ inputs.continue-on-error }}
+    continue-on-error: ${{ inputs.continue-on-error || false }}
 
     strategy:
       fail-fast: true
@@ -136,9 +136,9 @@ jobs:
     name: Build bindings [${{ matrix.rev }}] ${{ matrix.profile && 'R' || 'D' }} (${{ matrix.os.short }})
 
     needs: cfg
-    if: needs.cfg.outputs.mod-flipper0-sys-build && inputs.source
+    if: needs.cfg.outputs.mod-flipper0-sys-build || inputs.source
     runs-on: ${{ matrix.os.full }}
-    continue-on-error: ${{ inputs.continue-on-error }}
+    continue-on-error: ${{ inputs.continue-on-error || false }}
 
     strategy:
       fail-fast: true
@@ -239,12 +239,12 @@ jobs:
     needs:
       - cfg
       - build-bindings-prebuilt
-    if: inputs.examples && (
+    if: inputs.examples ||
       needs.cfg.outputs.mod-examples ||
       needs.cfg.outputs.mod-build-support ||
-      needs.cfg.outputs.mod-flipper0-any )
+      needs.cfg.outputs.mod-flipper0-any
     runs-on: ${{ matrix.os.full }}
-    continue-on-error: ${{ inputs.continue-on-error }}
+    continue-on-error: ${{ inputs.continue-on-error || false }}
 
     strategy:
       fail-fast: false
@@ -329,11 +329,11 @@ jobs:
     name: Build E ${{ matrix.profile && 'R' || 'D' }} (${{ matrix.os.short }})
 
     needs: [cfg, test-conditions]
-    if: inputs.examples && (
+    if: inputs.examples ||
       needs.cfg.outputs.mod-crates-examples ||
-      needs.cfg.test-conditions.flipper0-sys )
+      needs.cfg.test-conditions.flipper0-sys
     runs-on: ${{ matrix.os.full }}
-    continue-on-error: ${{ inputs.continue-on-error }}
+    continue-on-error: ${{ inputs.continue-on-error || false }}
 
     strategy:
       fail-fast: false
@@ -366,9 +366,9 @@ jobs:
     name: Style
 
     needs: cfg
-    if: needs.cfg.outputs.mod-any-src-rs && inputs.style
+    if: needs.cfg.outputs.mod-any-src-rs || inputs.style
     runs-on: ubuntu-latest
-    continue-on-error: ${{ inputs.continue-on-error }}
+    continue-on-error: ${{ inputs.continue-on-error || false }}
 
     steps:
       - name: Checkout repository
@@ -388,9 +388,9 @@ jobs:
     name: Clippy [${{ matrix.rev }}]
 
     needs: cfg
-    if: needs.cfg.outputs.mod-any-src-rs && inputs.clippy
+    if: needs.cfg.outputs.mod-any-src-rs || inputs.clippy
     runs-on: ubuntu-latest
-    continue-on-error: ${{ inputs.continue-on-error }}
+    continue-on-error: ${{ inputs.continue-on-error || false }}
 
     permissions:
       actions: read
@@ -542,13 +542,18 @@ jobs:
   cfg:
     name: 🛠 Config
     runs-on: ubuntu-latest
-    continue-on-error: ${{ inputs.continue-on-error }}
+    continue-on-error: ${{ inputs.continue-on-error || false }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
           fetch-depth: ${{ github.event.pull_request.commits || 10 }}
+
+      - name: inputs overrides (${{ steps.inputs.outputs.exist || 'no' }})
+        id: inputs
+        if: inputs
+        run: echo "exist=${{ contains(toJSON(inputs), ':') || '' }}"
 
       - id: ci
         name: ci
@@ -559,6 +564,7 @@ jobs:
 
       - id: examples
         name: examples
+        if: (!steps.inputs.outputs.exist)
         uses: boozook/has-changed-path@master
         with:
           paths: examples/**/*
@@ -566,6 +572,7 @@ jobs:
 
       - id: crates-examples
         name: crates-examples
+        if: (!steps.inputs.outputs.exist)
         uses: boozook/has-changed-path@master
         with:
           paths: examples/*.rs
@@ -573,6 +580,7 @@ jobs:
 
       - id: build-support
         name: build-support
+        if: (!steps.inputs.outputs.exist)
         uses: boozook/has-changed-path@master
         with:
           paths: build/
@@ -612,6 +620,7 @@ jobs:
 
       - id: fam
         name: fam
+        if: (!steps.inputs.outputs.exist)
         uses: boozook/has-changed-path@master
         with:
           paths: format/fam
@@ -619,6 +628,7 @@ jobs:
 
       - id: flipper0
         name: flipper0
+        if: (!steps.inputs.outputs.exist)
         uses: boozook/has-changed-path@master
         with:
           paths: flipper/
@@ -626,6 +636,7 @@ jobs:
 
       - id: flipper0-sys
         name: flipper0-sys
+        if: (!steps.inputs.outputs.exist)
         uses: boozook/has-changed-path@master
         with:
           paths: src/ Cargo.toml
@@ -633,6 +644,7 @@ jobs:
 
       - id: flipper0-sys-build
         name: flipper0-sys-build
+        if: (!steps.inputs.outputs.exist)
         uses: boozook/has-changed-path@master
         with:
           paths: src/build/
@@ -640,6 +652,7 @@ jobs:
 
       - id: gen
         name: gen
+        if: (!steps.inputs.outputs.exist)
         uses: boozook/has-changed-path@master
         with:
           paths: gen/
@@ -655,6 +668,7 @@ jobs:
 
       - id: any-src-rs
         name: any-src-rs
+        if: (!steps.inputs.outputs.exist)
         uses: boozook/has-changed-path@master
         with:
           paths: "**/*.rs"
@@ -710,7 +724,7 @@ jobs:
 
     needs: cfg
     runs-on: ubuntu-latest
-    continue-on-error: ${{ inputs.continue-on-error }}
+    continue-on-error: ${{ inputs.continue-on-error || false }}
 
     steps:
       - name: Checkout repository
