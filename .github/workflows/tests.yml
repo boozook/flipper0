@@ -553,7 +553,7 @@ jobs:
       - name: inputs overrides (${{ steps.inputs.outputs.exist || 'no' }})
         id: inputs
         if: inputs
-        run: echo "exist=${{ contains(toJSON(inputs), ':') || '' }}"
+        run: echo "exist=${{ contains(toJSON(inputs), ':') || '' }}" >> $GITHUB_OUTPUT
 
       - id: ci
         name: ci

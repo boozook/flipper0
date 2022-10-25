@@ -16,7 +16,7 @@ defaults:
     shell: bash
 
 jobs:
-  finally:
+  set:
     name: Tag
     runs-on: ubuntu-latest
 
