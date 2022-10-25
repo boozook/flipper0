@@ -60,7 +60,7 @@ jobs:
     name: Test ${{ matrix.crate }} (${{ matrix.os.short }})
 
     needs: [cfg, test-conditions]
-    if: fromJSON(needs.test-conditions.outputs.support-crates)[0] || inputs.support-crates
+    if: fromJSON(needs.test-conditions.outputs.support-crates)[0]
     runs-on: ${{ matrix.os.full }}
     continue-on-error: ${{ inputs.continue-on-error || false }}
 
@@ -97,7 +97,7 @@ jobs:
     name: Build ${{ matrix.crate }} [prebuilt] ${{ matrix.profile && 'R' || 'D' }} (${{ matrix.os.short }})
 
     needs: [cfg, test-conditions]
-    if: fromJSON(needs.test-conditions.outputs.main-crates)[0] || inputs.prebuild
+    if: fromJSON(needs.test-conditions.outputs.main-crates)[0]
     runs-on: ${{ matrix.os.full }}
     continue-on-error: ${{ inputs.continue-on-error || false }}
 
@@ -236,9 +236,7 @@ jobs:
   build-example-crates:
     name: Build E ${{ matrix.crate.name }} [${{ matrix.rev }}] ${{ matrix.profile && 'R' || 'D' }} (${{ matrix.os.short }})
 
-    needs:
-      - cfg
-      - build-bindings-prebuilt
+    needs: cfg
     if: inputs.examples ||
       needs.cfg.outputs.mod-examples ||
       needs.cfg.outputs.mod-build-support ||
@@ -685,9 +683,9 @@ jobs:
         # Is it a push to master or a call from another workflow?
         # For both of this options we should test all of things, anyway.
       - id: anyway
-        name: is push to master or call
+        name: is push to master
+        if: (!steps.inputs.outputs.exist)
         run: echo "value=${{
-          inputs.rev ||
           (github.event_name == 'push' && github.ref_name == 'master') ||
           (github.event_name == 'pull_request' && github.event.pull_request.merged == true) || '' }}" >> $GITHUB_OUTPUT
 
@@ -735,15 +733,17 @@ jobs:
       - id: support-crates-matrix-list
         run: >-
           echo value=[
-          ${{ needs.cfg.outputs.mod-fam && '\"fam\",' || '' }}
-          ${{ needs.cfg.outputs.mod-flipper0-build-common && '\"flipper0-build-cfg\",' || '' }}
-          ${{ (needs.cfg.outputs.mod-flipper0-fam-build || needs.cfg.outputs.mod-fam) && '\"flipper0-fam-build\",' || '' }}
+          ${{ inputs.support-crates || needs.cfg.outputs.mod-fam && '\"fam\",' || '' }}
+          ${{ inputs.support-crates || needs.cfg.outputs.mod-flipper0-build-common && '\"flipper0-build-cfg\",' || '' }}
+          ${{ (inputs.support-crates || needs.cfg.outputs.mod-flipper0-fam-build || needs.cfg.outputs.mod-fam) && '\"flipper0-fam-build\",' || '' }}
           ${{
+          inputs.support-crates ||
           (  needs.cfg.outputs.mod-flipper0-fap-build
           || needs.cfg.outputs.mod-flipper0-build-common
           || (needs.cfg.outputs.mod-flipper0-fam-build || needs.cfg.outputs.mod-fam)
           ) && '\"flipper0-fap-build\",' || '' }}
           ${{
+          inputs.support-crates ||
           ( needs.cfg.outputs.mod-flipper0-macro
           || (needs.cfg.outputs.mod-flipper0-fam-build || needs.cfg.outputs.mod-fam)
           ) && '\"flipper0-macro\",' || '' }}
@@ -753,6 +753,7 @@ jobs:
         run: >-
           echo value=[
           ${{
+          inputs.prebuild ||
           (  needs.cfg.outputs.mod-flipper0-sys
           || needs.cfg.outputs.mod-flipper0-build-common
           || needs.cfg.outputs.mod-flipper0-macro
@@ -760,6 +761,7 @@ jobs:
           || needs.cfg.outputs.mod-gen
           ) && '\"flipper0-sys\",' || '' }}
           ${{
+          inputs.prebuild ||
           (  needs.cfg.outputs.mod-flipper0
           || needs.cfg.outputs.mod-flipper0-sys
           || needs.cfg.outputs.mod-flipper0-build-common
@@ -775,6 +777,7 @@ jobs:
       main-crates: ${{ steps.main-crates-matrix-list.outputs.value }}
       flipper0-sys: >-
         ${{
+        inputs.prebuild ||
            needs.cfg.outputs.mod-flipper0-sys
         || needs.cfg.outputs.mod-flipper0-build-common
         || needs.cfg.outputs.mod-flipper0-macro
@@ -785,6 +788,7 @@ jobs:
 
       flipper0: >-
         ${{
+        inputs.prebuild ||
            needs.cfg.outputs.mod-flipper0
         || needs.cfg.outputs.mod-flipper0-sys
         || needs.cfg.outputs.mod-flipper0-build-common

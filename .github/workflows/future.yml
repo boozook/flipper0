@@ -128,9 +128,10 @@ jobs:
       # tags: ${{ toJSON(needs.tag.outputs.*) }}
       tags: >-
         [
-        ${{ needs.test-r.result == 'success' && format('"fw-{0}",', needs.tag.outputs.r) || '' }}
-        ${{ needs.test-rc.result == 'success' && format('"fw-{0}",', needs.tag.outputs.rc) || '' }}
+        ${{ needs.test-r.result == 'success' && format('"{0}",', needs.tag.outputs.r) || '' }}
+        ${{ needs.test-rc.result == 'success' && format('"{0}",', needs.tag.outputs.rc) || '' }}
         ]
+      prefix: fw-
       annotation: |
         Tested with fw ver {0}
         Link: https://github.com/flipperdevices/flipperzero-firmware/releases/tag/{0} .

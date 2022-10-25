@@ -10,6 +10,11 @@ on:
         description: Tag annotation template where `{0}` replaces with a tag.
         required: false
         type: string
+      prefix:
+        description: Prefix for tag used for git but not in annotation. e.g. `v`.
+        required: false
+        type: string
+        default: ""
 
 defaults:
   run:
@@ -37,6 +42,7 @@ jobs:
 
       - name: push tag
         run: |
-          git tag -fa ${{ matrix.tag }} -m '${{ format(inputs.annotation || '', matrix.tag) }}'
-          echo "Pushing tag ${{ matrix.tag }}"
-          git push --force origin refs/tags/${{ matrix.tag }}:refs/tags/${{ matrix.tag }}
+          TAG="${{ inputs.prefix }}${{ matrix.tag }}"
+          git tag -fa $TAG -m '${{ format(inputs.annotation || '', matrix.tag) }}'
+          echo "Pushing tag $TAG"
+          git push --force origin refs/tags/$TAG:refs/tags/$TAG
