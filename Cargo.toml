@@ -64,7 +64,7 @@ default = [
 	"allocator-global",
 	"oom-global",
 	"panic",
-	# "prebuild",
+	"prebuild",
 	"use-local-sdk",
 	"macro",
 ]
