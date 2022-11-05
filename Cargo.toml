@@ -16,7 +16,7 @@ default-members = ["flipper", "."]
 [package]
 name = "flipper0-sys"
 description = "Bindings for Flipper Zero fw"
-version = "0.2.13"
+version = "0.2.14"
 edition = "2021"
 
 authors = ["Alex Koz <a@koz.email>"]
@@ -109,7 +109,7 @@ version = "0.1.3"
 path = "build/common/cfg"
 
 [build-dependencies.bindgen]
-version = "0.60.1"
+version = "0.61.0"
 features = ["runtime", "which-rustfmt"]
 default-features = true
 
