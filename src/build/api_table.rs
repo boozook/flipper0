@@ -39,21 +39,24 @@ pub(crate) fn read_api_table<R: Read>(reader: R) -> Result<(Option<String>, Vec<
 
 
 pub(crate) fn gen_api_table_header(symbols: &[ApiTableRow<String>]) -> Result<PathBuf> {
+	use Status::*;
+	use ApiTableRow::*;
+
 	let outdir = PathBuf::from(env::var("OUT_DIR")?);
 	let mut result = String::new();
 
 	// XXX: add missed import:
 	result.push_str("#include <stdbool.h> \n\n");
 
-	for h in symbols.iter().filter(|s| matches!(s, ApiTableRow::Header { .. })) {
+	for h in symbols.iter().filter(|s| matches!(s, Header { status: NotRem(_), .. })) {
 		let path = h.name();
 		let row = format!("#include <{path}> \n");
 		result.push_str(&row);
 	}
 
 
-	result.push_str("\n/* valiables */\n\n");
-	for v in symbols.iter().filter(|s| matches!(s, ApiTableRow::Variable { .. })) {
+	result.push_str("\n/* variables */\n\n");
+	for v in symbols.iter().filter(|s| matches!(s, Variable { .. })) {
 		let name = v.name();
 		let ty = v.ty();
 		if ty == "const Icon" {
@@ -65,7 +68,7 @@ pub(crate) fn gen_api_table_header(symbols: &[ApiTableRow<String>]) -> Result<Pa
 
 
 	result.push_str("\n/* functions */\n\n");
-	for f in symbols.iter().filter(|s| matches!(s, ApiTableRow::Function { .. })) {
+	for f in symbols.iter().filter(|s| matches!(s, Function { .. })) {
 		let name = f.name();
 		let ret = f.ty();
 		let args = f.args();
@@ -83,9 +86,9 @@ pub(crate) fn gen_api_table_header(symbols: &[ApiTableRow<String>]) -> Result<Pa
 #[allow(dead_code)] // allow dead-code for status for future exclustions
 #[derive(Debug, Clone)]
 pub(crate) enum ApiTableRow<S: AsRef<str>> {
-	Header { status: S, name: S },
-	Variable { status: S, name: S, mut_ty: S, ty: S },
-	Function { status: S, name: S, ret: S, args: S },
+	Header { status: Status<S>, name: S },
+	Variable { status: Status<S>, name: S, mut_ty: S, ty: S },
+	Function { status: Status<S>, name: S, ret: S, args: S },
 }
 
 
@@ -93,17 +96,17 @@ impl From<csv::StringRecord> for ApiTableRow<String> {
 	fn from(row: csv::StringRecord) -> Self {
 		match row.get(0).unwrap().to_lowercase().as_str() {
 			"header" => {
-				Self::Header { status: row.get(1).unwrap().to_owned(),
+				Self::Header { status: row.get(1).unwrap().to_owned().into(),
 				               name: row.get(2).unwrap().to_owned() }
 			},
 			"variable" => {
-				Self::Variable { status: row.get(1).unwrap().to_owned(),
+				Self::Variable { status: row.get(1).unwrap().to_owned().into(),
 				                 name: row.get(2).unwrap().to_owned(),
 				                 mut_ty: row.get(3).unwrap().to_owned(),
 				                 ty: row.get(4).unwrap().to_owned() }
 			},
 			"function" => {
-				Self::Function { status: row.get(1).unwrap().to_owned(),
+				Self::Function { status: row.get(1).unwrap().to_owned().into(),
 				                 name: row.get(2).unwrap().to_owned(),
 				                 ret: row.get(3).unwrap().to_owned(),
 				                 args: row.get(4).unwrap_or_default().to_owned() }
@@ -138,6 +141,31 @@ impl<S: AsRef<str>> ApiTableRow<S> {
 			ApiTableRow::Header { .. } => "",
 			ApiTableRow::Variable { .. } => "",
 			ApiTableRow::Function { args, .. } => args.as_ref(),
+		}
+	}
+
+	pub fn status(&self) -> &Status<S> {
+		match self {
+			ApiTableRow::Header { status, .. } => status,
+			ApiTableRow::Variable { status, .. } => status,
+			ApiTableRow::Function { status, .. } => status,
+		}
+	}
+}
+
+
+#[derive(Debug, Clone)]
+pub enum Status<S: AsRef<str> = &'static str> {
+	Rem,
+	NotRem(S),
+}
+
+impl<S: AsRef<str>> From<S> for Status<S> {
+	fn from(value: S) -> Self {
+		let s = value.as_ref();
+		match s {
+			"-" => Status::Rem,
+			_ => Status::NotRem(value),
 		}
 	}
 }
