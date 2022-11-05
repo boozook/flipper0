@@ -1,6 +1,7 @@
-# Rusty Flipper Zero Application
+# Rusty API for Flipper Zero
 
-TODO
+🦀 ❤️‍🔥 🐬
+
 
 ## Project Structure
 
