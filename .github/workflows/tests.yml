@@ -697,8 +697,8 @@ jobs:
         ~/.cargo/git/db/
         target/
       # minimal supported version:
-      def-sdk-ver: ${{ inputs.rev || steps.gen-sdk-ver-file.outputs.value || '0.69.0' }}
-      def-api-ver: ${{ steps.gen-api-ver-file.outputs.value || '2.2' }}
+      def-sdk-ver: ${{ inputs.rev || steps.gen-sdk-ver-file.outputs.value || '0.70.1' }}
+      def-api-ver: ${{ steps.gen-api-ver-file.outputs.value || '7.0' }}
       # changes:
       mod-fam: ${{ steps.fam.outputs.changed == 'true' || steps.anyway.outputs.value }}
       mod-flipper0-build-common: ${{ steps.common.outputs.changed == 'true' || steps.anyway.outputs.value }}
