@@ -3,14 +3,16 @@
 Automatically generated bindings (or "externs") for [Flipper Zero Fw][] with some little hand-crafted wrappers and additions as upper abstraction layer.
 
 This can be built with:
-- __without Flipper fw sources using default features 'prebuild`__
-- __with modified or alt fw using features `use-local-sdk`__
+- without Flipper fw sources using default feature `prebuild`
+- with modified fw using feature `use-local-sdk`
 - with enabled feature `use-remote-sdk` official fw will be downloaded, then build as with `use-local-sdk` feature.
 
 
 ## Compatibility
 
-Minimal supported fw version is __0.69.0__ but should work normally with any 0.69.x without `prebuild` feature.
+Minimal supported version:
+- FW: [0.70.1](https://github.com/flipperdevices/flipperzero-firmware/releases/tag/0.70.1)
+- API: [7.0](https://github.com/flipperdevices/flipperzero-firmware/blob/release/firmware/targets/f7/api_symbols.csv#L2)
 
 Latest supported version can be determined by [git tags](https://github.com/boozook/flipper0/tags) starting with `fw-`.
 

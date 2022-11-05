@@ -145,7 +145,7 @@ FLIPPER_REPO_BRANCH=release \
 ```
 And/or with specified tag or revision:
 ```bash
-FLIPPER_REPO_REV="0.69.0" \
+FLIPPER_REPO_REV="0.70.1" \
   cargo +nightly build --target=thumbv7em-none-eabihf
 ```
 

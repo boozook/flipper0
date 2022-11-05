@@ -1,1 +1,1 @@
- Flipper Zero SDK git revision: 50dc2d738991205f2d05905517fac96c619c3b5a, API version: __2.2__.
+ Flipper Zero SDK git revision: bf8fd71c00be90015811b9e6b13b88d0e7b1d5ee, API version: __7.3__.
