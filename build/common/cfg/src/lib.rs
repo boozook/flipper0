@@ -25,7 +25,7 @@ pub fn flipper_sdk_path() -> Result<PathBuf, Box<dyn Error>> {
 			};
 
 			Ok(path.canonicalize()
-			       .map_err(|err| println!("cargo:warning=Failed canonicalization SDK path: {err}"))
+			       .map_err(|err| println!("cargo:warning=Failed canonicalization SDK path '{}' : {err}", path.display()))
 			       .unwrap_or(path))
 		}
 	} else {

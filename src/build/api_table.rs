@@ -120,6 +120,7 @@ impl From<csv::StringRecord> for ApiTableRow<String> {
 }
 
 
+#[allow(dead_code)]
 impl<S: AsRef<str>> ApiTableRow<S> {
 	pub fn name(&self) -> &str {
 		match self {
