@@ -385,6 +385,9 @@ fn from_source<P: AsRef<Path>, Builder: FnOnce() -> bindgen::Builder>(builder: B
 		            "FreeRTOS-Kernel/portable/GCC/ARM_CM4F",
 		            "ST25RFAL002/source/st25r3916",
 		            "libusb_stm32/inc",
+		            "infrared",
+		            "infrared/worker",
+		            "infrared/encoder_decoder",
 		];
 		for lib in libs {
 			let path = PathBuf::from("lib").join(PathBuf::from(lib));

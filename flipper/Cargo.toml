@@ -3,7 +3,7 @@ cargo-features = ["per-package-target"]
 [package]
 name = "flipper0"
 description = "API for Flipper Zero fw"
-version = "0.3.6"
+version = "0.3.7"
 edition = "2021"
 
 authors = ["Alex Koz <a@koz.email>"]
@@ -55,7 +55,7 @@ macro = ["sys/macro"]
 
 [dependencies.sys]
 package = "flipper0-sys"
-version = "0.2.12"
+version = "0.2.13"
 path = ".."
 default-features = false
 features = ["derive-debug"]

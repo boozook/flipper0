@@ -280,7 +280,7 @@ dependencies = [
 
 [[package]]
 name = "flipper0"
-version = "0.3.6"
+version = "0.3.7"
 dependencies = [
  "flipper0-sys",
 ]
@@ -326,7 +326,7 @@ dependencies = [
 
 [[package]]
 name = "flipper0-sys"
-version = "0.2.12"
+version = "0.2.13"
 dependencies = [
  "bindgen",
  "csv",
