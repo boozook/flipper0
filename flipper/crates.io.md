@@ -3,16 +3,9 @@
 ## Crate contains
 
 - Re-exports low-level bindings
-- Re-shares `#[main]` macro
+- `#[main]` macro
 - File System rusty API
 - Some things such as stdout, print(ln), OsString, etc..
-
-Not yet implemented:
-
-- [ ] Threading rusty API
-- [ ] Async-await on top of above
-- [ ] Neat logging
-- [ ] Some little things like `PathBuf`.
 
 
 For detailed information see:
