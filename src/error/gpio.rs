@@ -19,8 +19,8 @@ impl core::fmt::Display for Error {
 }
 
 
-impl const From<i32> for ErrorStatus {
-	fn from(v: i32) -> Self {
+impl const From<i8> for ErrorStatus {
+	fn from(v: i8) -> Self {
 		match v {
 			0 => Self::SUCCESS,
 			1 => Self::ERROR,
@@ -29,8 +29,8 @@ impl const From<i32> for ErrorStatus {
 	}
 }
 
-impl const From<i32> for Error {
-	fn from(_: i32) -> Self { Self }
+impl const From<i8> for Error {
+	fn from(_: i8) -> Self { Self }
 }
 
 impl const From<Error> for ErrorStatus {
