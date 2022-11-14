@@ -134,7 +134,8 @@ pub fn try_build() -> Result {
 
 		// ARM toolchain
 		builder = builder.blocklist_file("stdlib.h")
-		                 .clang_args(&["--include-directory", &toolchain.join("include").display().to_string()]);
+		                 .clang_args(&["--include-directory", &toolchain.join("include").display().to_string()])
+                                 .clang_arg("-fshort-enums");
 
 
 		// specifically for the target:

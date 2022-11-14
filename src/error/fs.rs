@@ -10,8 +10,8 @@ use crate::ffi::FS_Error;
 pub type Status = FS_Error;
 
 
-impl const From<i32> for Status {
-	fn from(v: i32) -> Self {
+impl const From<i8> for Status {
+	fn from(v: i8) -> Self {
 		match v {
 			0 => Self::FSE_OK,
 			1 => Self::FSE_NOT_READY,
@@ -28,8 +28,8 @@ impl const From<i32> for Status {
 	}
 }
 
-impl const From<i32> for Error {
-	fn from(v: i32) -> Self { unsafe { core::mem::transmute(v) } }
+impl const From<i8> for Error {
+	fn from(v: i8) -> Self { unsafe { core::mem::transmute(v) } }
 }
 
 impl const From<Error> for Status {
@@ -68,7 +68,7 @@ impl const FromResidual for Status {
 	}
 }
 
-#[repr(i32)]
+#[repr(i8)]
 #[derive(Debug, Clone)]
 pub enum Error {
 	#[doc = "FS not ready"]
