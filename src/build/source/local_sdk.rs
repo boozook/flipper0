@@ -92,7 +92,8 @@ pub fn try_build() -> Result {
 		                                             .ctypes_prefix("core::ffi")
 		                                             .size_t_is_usize(true)
 		                                             .no_convert_floats()
-		                                             .translate_enum_integer_types(true)
+																	.clang_arg("-fshort-enums")
+																	.translate_enum_integer_types(true)
 		                                             .array_pointers_in_arguments(true)
 		                                             .explicit_padding(false)
 		                                             .default_enum_style(EnumVariation::Rust { non_exhaustive: true })
@@ -134,8 +135,7 @@ pub fn try_build() -> Result {
 
 		// ARM toolchain
 		builder = builder.blocklist_file("stdlib.h")
-		                 .clang_args(&["--include-directory", &toolchain.join("include").display().to_string()])
-                                 .clang_arg("-fshort-enums");
+		                 .clang_args(&["--include-directory", &toolchain.join("include").display().to_string()]);
 
 
 		// specifically for the target:

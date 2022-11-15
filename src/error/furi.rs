@@ -9,8 +9,8 @@ use crate::ffi::FuriStatus;
 pub type Status = FuriStatus;
 
 
-impl const From<i8> for FuriStatus {
-	fn from(v: i8) -> Self {
+impl const From<i32> for FuriStatus {
+	fn from(v: i32) -> Self {
 		match v {
 			0 => Self::FuriStatusOk,
 			-1 => Self::FuriStatusError,
@@ -24,8 +24,8 @@ impl const From<i8> for FuriStatus {
 	}
 }
 
-impl const From<i8> for Error {
-	fn from(v: i8) -> Self { unsafe { core::mem::transmute(v) } }
+impl const From<i32> for Error {
+	fn from(v: i32) -> Self { unsafe { core::mem::transmute(v) } }
 }
 
 impl const From<Error> for FuriStatus {
@@ -61,7 +61,7 @@ impl const FromResidual for FuriStatus {
 	}
 }
 
-#[repr(i8)]
+#[repr(i32)]
 #[derive(Debug, Clone)]
 pub enum Error {
 	Error = FuriStatus::FuriStatusError as _,
